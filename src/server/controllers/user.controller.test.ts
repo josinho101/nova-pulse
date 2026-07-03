@@ -15,7 +15,7 @@ function createTestUserType() {
   return result.data;
 }
 
-function baseInput(typeId: string) {
+function baseInput(typeId: number) {
   return {
     firstName: "Jane",
     lastName: "Doe",
@@ -67,7 +67,7 @@ describe("createUser", () => {
   });
 
   it("rejects a typeId that does not reference an existing UserType", () => {
-    const result = createUser(baseInput("nonexistent-type-id"));
+    const result = createUser(baseInput(999999));
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -162,7 +162,7 @@ describe("updateUser", () => {
 
     const result = updateUser(created.data.id, {
       ...baseInput(userType.id),
-      typeId: "nonexistent-type-id",
+      typeId: 999999,
     });
 
     expect(result.ok).toBe(false);

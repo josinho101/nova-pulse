@@ -28,7 +28,9 @@
       "Bash(curl -s -m 2 http://localhost:3000/api/v1/health)",
       "Bash(curl -s -m 3 http://localhost:3000/api/v1/health)",
       "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*next*dev*'\\\\'' -or $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId, CommandLine')",
-      "Bash(powershell -NoProfile -Command 'Stop-Process -Id 17204,4316,17308 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId')"
+      "Bash(powershell -NoProfile -Command 'Stop-Process -Id 17204,4316,17308 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId')",
+      "Bash(ls -la src/app/docs)",
+      "Bash(ls -la src/app/swagger)"
     ]
   }
 }

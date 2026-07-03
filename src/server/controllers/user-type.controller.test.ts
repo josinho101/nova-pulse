@@ -45,7 +45,7 @@ describe("getUserType", () => {
   });
 
   it("returns 404 for a nonexistent id", () => {
-    const result = getUserType("missing-id");
+    const result = getUserType(999999);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -64,7 +64,7 @@ describe("updateUserType", () => {
   });
 
   it("returns 404 for a nonexistent id", () => {
-    const result = updateUserType("missing-id", { name: "Whatever" });
+    const result = updateUserType(999999, { name: "Whatever" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -111,7 +111,7 @@ describe("deleteUserType", () => {
   });
 
   it("returns 404 for a nonexistent id", () => {
-    const result = deleteUserType("missing-id");
+    const result = deleteUserType(999999);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);

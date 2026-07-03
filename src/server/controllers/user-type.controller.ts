@@ -16,7 +16,7 @@ export const userTypeInputSchema = z.object({
 export type UserTypeInput = z.infer<typeof userTypeInputSchema>;
 
 export interface UserType extends UserTypeInput {
-  id: string;
+  id: number;
 }
 
 function toFieldErrors(error: z.ZodError) {
@@ -30,7 +30,7 @@ export function listUserTypes(): ApiResult<UserType[]> {
   return ok(listUserTypeRecords());
 }
 
-export function getUserType(id: string): ApiResult<UserType> {
+export function getUserType(id: number): ApiResult<UserType> {
   const userType = getUserTypeById(id);
   if (!userType) return fail(404, "UserType not found");
   return ok(userType);
@@ -42,12 +42,11 @@ export function createUserType(input: unknown): ApiResult<UserType> {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  const created: UserType = { id: crypto.randomUUID(), ...parsed.data };
-  addUserType(created);
+  const created = addUserType(parsed.data);
   return ok(created);
 }
 
-export function updateUserType(id: string, input: unknown): ApiResult<UserType> {
+export function updateUserType(id: number, input: unknown): ApiResult<UserType> {
   if (!getUserTypeById(id)) return fail(404, "UserType not found");
 
   const parsed = userTypeInputSchema.safeParse(input);
@@ -60,7 +59,7 @@ export function updateUserType(id: string, input: unknown): ApiResult<UserType> 
   return ok(updated);
 }
 
-export function deleteUserType(id: string): ApiResult<null> {
+export function deleteUserType(id: number): ApiResult<null> {
   if (!getUserTypeById(id)) return fail(404, "UserType not found");
 
   if (isUserTypeReferenced(id)) {

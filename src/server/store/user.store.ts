@@ -6,7 +6,7 @@ export interface UserRecord {
   dob: string;
   address: string;
   email: string;
-  typeId: string;
+  typeId: number;
 }
 
 let users: UserRecord[] = [];
@@ -42,7 +42,7 @@ export function findUserByEmail(email: string, excludeId?: string): UserRecord |
   return users.find((user) => user.email === email && user.id !== excludeId);
 }
 
-export function isUserTypeReferenced(typeId: string): boolean {
+export function isUserTypeReferenced(typeId: number): boolean {
   return users.some((user) => user.typeId === typeId);
 }
 

@@ -17,7 +17,7 @@ export const userInputSchema = z.object({
   dob: z.iso.date("dob must be a valid ISO date (YYYY-MM-DD)"),
   address: z.string().trim().min(1, "address is required"),
   email: z.email("email must be a valid email address"),
-  typeId: z.string().trim().min(1, "typeId is required"),
+  typeId: z.number().int("typeId must be an integer"),
 });
 
 export type UserInput = z.infer<typeof userInputSchema>;
