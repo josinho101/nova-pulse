@@ -9,7 +9,26 @@
       "Bash(curl -s http://localhost:3000/api/health)",
       "Bash(kill %1)",
       "Bash(curl -s http://localhost:3000/api/v1/health)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/api/health)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/api/health)",
+      "Bash(node -e \"console.log\\(require\\('zod/package.json'\\).version\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(npx vitest *)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/v1/user-types -H \"Content-Type: application/json\" -d '{\"name\":\"Admin\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/v1/users -H 'Content-Type: application/json' -d '{\"firstName\":\"Jane\",\"lastName\":\"Doe\",\"dob\":\"1990-01-15\",\"address\":\"123 Main St\",\"email\":\"jane@example.com\",\"typeId\":\"e1adbadc-5550-4e99-8226-34486c093983\"}')",
+      "Bash(curl -s http://localhost:3000/api/v1/users)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/api/v1/users -H \"Content-Type: application/json\" -d '{\"firstName\":\"Jane2\",\"lastName\":\"Doe2\",\"dob\":\"1990-01-15\",\"address\":\"456 Elm St\",\"email\":\"jane@example.com\",\"typeId\":\"e1adbadc-5550-4e99-8226-34486c093983\"}')",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/api/v1/users -H \"Content-Type: application/json\" -d '{\"firstName\":\"Bob\",\"lastName\":\"Smith\",\"dob\":\"1990-01-15\",\"address\":\"789 Oak St\",\"email\":\"bob@example.com\",\"typeId\":\"nonexistent\"}')",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" -X POST http://localhost:3000/api/v1/users -H \"Content-Type: application/json\" -d '{\"firstName\":\"Bob\",\"lastName\":\"Smith\",\"dob\":\"1990-01-15\",\"address\":\"789 Oak St\",\"email\":\"not-an-email\",\"typeId\":\"e1adbadc-5550-4e99-8226-34486c093983\"}')",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X DELETE http://localhost:3000/api/v1/user-types/e1adbadc-5550-4e99-8226-34486c093983)",
+      "Bash(curl -s -w \"\\\\nHTTP_STATUS:%{http_code}\\\\n\" http://localhost:3000/api/v1/users/nonexistent-id)",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X DELETE http://localhost:3000/api/v1/users/10eb88ca-f1e0-43f2-914f-543184897e4a)",
+      "Bash(taskkill //F //IM node.exe //FI \"WINDOWTITLE eq npm*\")",
+      "Bash(powershell -Command 'Get-Process -Name node -ErrorAction SilentlyContinue | Where-Object {$_.MainWindowTitle -eq '\\\\'''\\\\''} | Select-Object -First 0')",
+      "Bash(curl -s -m 2 http://localhost:3000/api/v1/health)",
+      "Bash(curl -s -m 3 http://localhost:3000/api/v1/health)",
+      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*next*dev*'\\\\'' -or $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId, CommandLine')",
+      "Bash(powershell -NoProfile -Command 'Stop-Process -Id 17204,4316,17308 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId')"
     ]
   }
 }
