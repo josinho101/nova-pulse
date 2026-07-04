@@ -184,6 +184,7 @@ export function Sidebar({
             <ListItemIcon
               sx={{
                 minWidth: collapsed ? 0 : 36,
+                color: isUsersSectionActive ? "primary.main" : undefined,
                 justifyContent: "center",
               }}
             >
@@ -191,7 +192,17 @@ export function Sidebar({
             </ListItemIcon>
             {!collapsed && (
               <>
-                <ListItemText primary={t("users")} />
+                <ListItemText
+                  primary={t("users")}
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontWeight: isUsersSectionActive ? 600 : 400,
+                        color: isUsersSectionActive ? "primary.main" : undefined,
+                      },
+                    },
+                  }}
+                />
                 {usersOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </>
             )}
@@ -204,10 +215,25 @@ export function Sidebar({
                 selected={pathname === "/users"}
                 sx={{ borderRadius: 1, pl: 4 }}
               >
-                <ListItemIcon sx={{ minWidth: 36 }}>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    color: pathname === "/users" ? "primary.main" : undefined,
+                  }}
+                >
                   <FormatListBulletedIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary={t("usersList")} />
+                <ListItemText
+                  primary={t("usersList")}
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontWeight: pathname === "/users" ? 600 : 400,
+                        color: pathname === "/users" ? "primary.main" : undefined,
+                      },
+                    },
+                  }}
+                />
               </ListItemButton>
               <ListItemButton
                 component={Link}
@@ -215,10 +241,25 @@ export function Sidebar({
                 selected={pathname === "/users/roles-and-groups"}
                 sx={{ borderRadius: 1, pl: 4 }}
               >
-                <ListItemIcon sx={{ minWidth: 36 }}>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                  }}
+                >
                   <GroupsIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary={t("rolesAndGroups")} />
+                <ListItemText
+                  primary={t("rolesAndGroups")}
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
+                        color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                      },
+                    },
+                  }}
+                />
               </ListItemButton>
               <ListItemButton
                 component={Link}
@@ -226,10 +267,25 @@ export function Sidebar({
                 selected={pathname === "/users/user-types"}
                 sx={{ borderRadius: 1, pl: 4 }}
               >
-                <ListItemIcon sx={{ minWidth: 36 }}>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    color: pathname === "/users/user-types" ? "primary.main" : undefined,
+                  }}
+                >
                   <BadgeIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary={t("userTypes")} />
+                <ListItemText
+                  primary={t("userTypes")}
+                  slotProps={{
+                    primary: {
+                      sx: {
+                        fontWeight: pathname === "/users/user-types" ? 600 : 400,
+                        color: pathname === "/users/user-types" ? "primary.main" : undefined,
+                      },
+                    },
+                  }}
+                />
               </ListItemButton>
             </List>
           </Collapse>
@@ -274,10 +330,25 @@ export function Sidebar({
                   selected={pathname === "/users"}
                   sx={{ borderRadius: 1 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36 }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 36,
+                      color: pathname === "/users" ? "primary.main" : undefined,
+                    }}
+                  >
                     <FormatListBulletedIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={t("usersList")} />
+                  <ListItemText
+                    primary={t("usersList")}
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontWeight: pathname === "/users" ? 600 : 400,
+                          color: pathname === "/users" ? "primary.main" : undefined,
+                        },
+                      },
+                    }}
+                  />
                 </ListItemButton>
                 <ListItemButton
                   component={Link}
@@ -285,10 +356,26 @@ export function Sidebar({
                   selected={pathname === "/users/roles-and-groups"}
                   sx={{ borderRadius: 1 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36 }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 36,
+                      color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                    }}
+                  >
                     <GroupsIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={t("rolesAndGroups")} />
+                  <ListItemText
+                    primary={t("rolesAndGroups")}
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
+                          color:
+                            pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                        },
+                      },
+                    }}
+                  />
                 </ListItemButton>
                 <ListItemButton
                   component={Link}
@@ -296,10 +383,25 @@ export function Sidebar({
                   selected={pathname === "/users/user-types"}
                   sx={{ borderRadius: 1 }}
                 >
-                  <ListItemIcon sx={{ minWidth: 36 }}>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 36,
+                      color: pathname === "/users/user-types" ? "primary.main" : undefined,
+                    }}
+                  >
                     <BadgeIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={t("userTypes")} />
+                  <ListItemText
+                    primary={t("userTypes")}
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontWeight: pathname === "/users/user-types" ? 600 : 400,
+                          color: pathname === "/users/user-types" ? "primary.main" : undefined,
+                        },
+                      },
+                    }}
+                  />
                 </ListItemButton>
               </List>
             </Paper>
