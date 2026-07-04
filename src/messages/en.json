@@ -23,6 +23,9 @@
   "DashboardPage": {
     "welcomeMessage": "Welcome back. Here is a quick overview of your pharmacy operations."
   },
+  "ComingSoonPage": {
+    "message": "Coming soon."
+  },
   "Sidebar": {
     "expand": "Expand",
     "collapse": "Collapse",

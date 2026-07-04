@@ -24,6 +24,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 export function Sidebar({
@@ -37,7 +38,10 @@ export function Sidebar({
 }) {
   const t = useTranslations("Sidebar");
   const tCommon = useTranslations("Common");
-  const [usersOpen, setUsersOpen] = useState(false);
+  const pathname = usePathname();
+  const isUsersSectionActive =
+    pathname === "/users" || pathname === "/users/roles-and-groups" || pathname === "/user-types";
+  const [usersOpen, setUsersOpen] = useState(isUsersSectionActive);
   const [flyoutOpen, setFlyoutOpen] = useState(false);
   const usersButtonRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -116,7 +120,9 @@ export function Sidebar({
       </Toolbar>
       <List sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
         <ListItemButton
-          selected
+          component={Link}
+          href="/"
+          selected={pathname === "/"}
           sx={{
             borderRadius: 1,
             justifyContent: collapsed ? "center" : "flex-start",
@@ -125,7 +131,7 @@ export function Sidebar({
           <ListItemIcon
             sx={{
               minWidth: collapsed ? 0 : 36,
-              color: "primary.main",
+              color: pathname === "/" ? "primary.main" : undefined,
               justifyContent: "center",
             }}
           >
@@ -135,7 +141,12 @@ export function Sidebar({
             <ListItemText
               primary={t("dashboard")}
               slotProps={{
-                primary: { sx: { fontWeight: 600, color: "primary.main" } },
+                primary: {
+                  sx: {
+                    fontWeight: pathname === "/" ? 600 : 400,
+                    color: pathname === "/" ? "primary.main" : undefined,
+                  },
+                },
               }}
             />
           )}
@@ -179,19 +190,34 @@ export function Sidebar({
           </ListItemButton>
           <Collapse in={usersOpen && !collapsed} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ borderRadius: 1, pl: 4 }}>
+              <ListItemButton
+                component={Link}
+                href="/users"
+                selected={pathname === "/users"}
+                sx={{ borderRadius: 1, pl: 4 }}
+              >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <FormatListBulletedIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText primary={t("usersList")} />
               </ListItemButton>
-              <ListItemButton sx={{ borderRadius: 1, pl: 4 }}>
+              <ListItemButton
+                component={Link}
+                href="/users/roles-and-groups"
+                selected={pathname === "/users/roles-and-groups"}
+                sx={{ borderRadius: 1, pl: 4 }}
+              >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <GroupsIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText primary={t("rolesAndGroups")} />
               </ListItemButton>
-              <ListItemButton component={Link} href="/user-types" sx={{ borderRadius: 1, pl: 4 }}>
+              <ListItemButton
+                component={Link}
+                href="/user-types"
+                selected={pathname === "/user-types"}
+                sx={{ borderRadius: 1, pl: 4 }}
+              >
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <BadgeIcon fontSize="small" />
                 </ListItemIcon>
@@ -234,19 +260,34 @@ export function Sidebar({
                 {t("users")}
               </Typography>
               <List component="div" disablePadding>
-                <ListItemButton sx={{ borderRadius: 1 }}>
+                <ListItemButton
+                  component={Link}
+                  href="/users"
+                  selected={pathname === "/users"}
+                  sx={{ borderRadius: 1 }}
+                >
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <FormatListBulletedIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary={t("usersList")} />
                 </ListItemButton>
-                <ListItemButton sx={{ borderRadius: 1 }}>
+                <ListItemButton
+                  component={Link}
+                  href="/users/roles-and-groups"
+                  selected={pathname === "/users/roles-and-groups"}
+                  sx={{ borderRadius: 1 }}
+                >
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <GroupsIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary={t("rolesAndGroups")} />
                 </ListItemButton>
-                <ListItemButton component={Link} href="/user-types" sx={{ borderRadius: 1 }}>
+                <ListItemButton
+                  component={Link}
+                  href="/user-types"
+                  selected={pathname === "/user-types"}
+                  sx={{ borderRadius: 1 }}
+                >
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <BadgeIcon fontSize="small" />
                   </ListItemIcon>
