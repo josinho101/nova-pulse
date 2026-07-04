@@ -27,15 +27,15 @@ export default async function LoginPage() {
           inset: 0,
           color: "primary.main",
           bgcolor: "currentcolor",
-          maskImage: "url(/login-background.svg)",
+          maskImage: "url(/images/pharmacy-background.svg)",
           maskRepeat: "no-repeat",
           maskPosition: "center",
           maskSize: "cover",
-          WebkitMaskImage: "url(/login-background.svg)",
+          WebkitMaskImage: "url(/images/pharmacy-background.svg)",
           WebkitMaskRepeat: "no-repeat",
           WebkitMaskPosition: "center",
           WebkitMaskSize: "cover",
-          opacity: 0.2,
+          opacity: 0.5,
         }}
       />
       <Box sx={{ position: "relative", width: "100%", maxWidth: 360 }}>
