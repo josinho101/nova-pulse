@@ -40,6 +40,10 @@ export function UserTypeFormDialog({
       setFieldError(t("nameRequired"));
       return;
     }
+    if (trimmed.length > 20) {
+      setFieldError(t("nameTooLong"));
+      return;
+    }
 
     setSubmitting(true);
     setFieldError(null);
@@ -58,7 +62,7 @@ export function UserTypeFormDialog({
 
     const nameFieldError = result.fields?.find((field) => field.path === "name")?.message;
     setFieldError(nameFieldError ?? result.message);
-    onError(result.message);
+    onError(nameFieldError ?? result.message);
   };
 
   return (
@@ -98,6 +102,7 @@ export function UserTypeFormDialog({
             error={!!fieldError}
             helperText={fieldError ?? " "}
             disabled={submitting}
+            slotProps={{ htmlInput: { maxLength: 20 } }}
             sx={{ mt: 1 }}
           />
         </DialogContent>

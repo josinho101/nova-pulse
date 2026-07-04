@@ -54,4 +54,16 @@ describe("buildOpenApiDocument", () => {
     expect(doc.paths["/api/v1/users"]!.post!.responses["409"]).toBeDefined();
     expect(doc.paths["/api/v1/users/{id}"]!.put!.responses["409"]).toBeDefined();
   });
+
+  it("documents the duplicate-name 409 for user-type create and update", () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths["/api/v1/user-types"]!.post!.responses["409"]).toBeDefined();
+    expect(doc.paths["/api/v1/user-types/{id}"]!.put!.responses["409"]).toBeDefined();
+  });
+
+  it("derives the 20-character max length constraint on UserTypeInput.name", () => {
+    const doc = buildOpenApiDocument();
+    const nameSchema = doc.components.schemas.UserTypeInput?.properties?.name;
+    expect(nameSchema).toMatchObject({ maxLength: 20, minLength: 1 });
+  });
 });

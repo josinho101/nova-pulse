@@ -33,6 +33,35 @@ describe("createUserType", () => {
     expect(result.fields?.some((field) => field.path === "name")).toBe(true);
   });
 
+  it("rejects a name longer than 20 characters", () => {
+    const result = createUserType({ name: "a".repeat(21) });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.fields?.some((field) => field.path === "name")).toBe(true);
+  });
+
+  it("rejects a duplicate active name", () => {
+    createUserType({ name: "Admin" });
+    const result = createUserType({ name: "Admin" });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(409);
+    expect(result.fields?.some((field) => field.path === "name")).toBe(true);
+  });
+
+  it("allows reusing the name of a soft-deleted user type", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    deleteUserType(created.data.id);
+    const result = createUserType({ name: "Admin" });
+
+    expect(result.ok).toBe(true);
+  });
+
   it("populates audit fields and defaults status to active", () => {
     const result = createUserType({ name: "Admin" });
 
@@ -106,6 +135,36 @@ describe("updateUserType", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
+  });
+
+  it("rejects a name longer than 20 characters", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    const result = updateUserType(created.data.id, { name: "a".repeat(21) });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+  });
+
+  it("allows saving with its own unchanged name", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    const result = updateUserType(created.data.id, { name: "Admin" });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects renaming to another active user type's name", () => {
+    const first = createUserType({ name: "Admin" });
+    const second = createUserType({ name: "Manager" });
+    if (!first.ok || !second.ok) throw new Error("setup failed");
+
+    const result = updateUserType(second.data.id, { name: "Admin" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(409);
+    expect(result.fields?.some((field) => field.path === "name")).toBe(true);
   });
 
   it("preserves createdAt/createdBy/status while refreshing updatedAt/updatedBy", () => {

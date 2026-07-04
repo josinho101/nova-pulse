@@ -27,6 +27,12 @@ export function getUserTypeById(id: number): UserTypeRecord | undefined {
   return userType && isActive(userType) ? userType : undefined;
 }
 
+export function findUserTypeByName(name: string, excludeId?: number): UserTypeRecord | undefined {
+  return userTypes.find(
+    (userType) => isActive(userType) && userType.name === name && userType.id !== excludeId,
+  );
+}
+
 export function addUserType(record: { name: string }): UserTypeRecord {
   const now = new Date().toISOString();
   const created: UserTypeRecord = {

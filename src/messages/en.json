@@ -68,6 +68,7 @@
     "editTitle": "Edit User Type",
     "nameLabel": "Name",
     "nameRequired": "Name is required",
+    "nameTooLong": "Name must be at most 20 characters",
     "cancel": "Cancel",
     "save": "Save",
     "createSuccess": "User type created successfully",
