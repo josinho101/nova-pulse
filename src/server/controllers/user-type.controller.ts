@@ -5,6 +5,7 @@ import {
   getUserTypeById,
   listUserTypes as listUserTypeRecords,
   updateUserType as updateUserTypeRecord,
+  type UserTypeStatus,
 } from "@/server/store/user-type.store";
 import { isUserTypeReferenced } from "@/server/store/user.store";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
@@ -17,6 +18,11 @@ export type UserTypeInput = z.infer<typeof userTypeInputSchema>;
 
 export interface UserType extends UserTypeInput {
   id: number;
+  status: UserTypeStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 }
 
 function toFieldErrors(error: z.ZodError) {
@@ -54,9 +60,8 @@ export function updateUserType(id: number, input: unknown): ApiResult<UserType> 
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  const updated: UserType = { id, ...parsed.data };
-  updateUserTypeRecord(id, updated);
-  return ok(updated);
+  const updated = updateUserTypeRecord(id, parsed.data);
+  return ok(updated!);
 }
 
 export function deleteUserType(id: number): ApiResult<null> {

@@ -42,5 +42,29 @@
     "accountMenuAria": "Account menu",
     "profile": "Profile",
     "signOut": "Sign out"
+  },
+  "UserTypesPage": {
+    "title": "User Types",
+    "addButton": "Add",
+    "columnName": "Name",
+    "columnCreatedAt": "Created At",
+    "columnUpdatedAt": "Updated At",
+    "columnCreatedBy": "Created By",
+    "columnUpdatedBy": "Updated By",
+    "columnActions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
+    "noUserTypes": "No user types found.",
+    "addTitle": "Add User Type",
+    "editTitle": "Edit User Type",
+    "nameLabel": "Name",
+    "nameRequired": "Name is required",
+    "cancel": "Cancel",
+    "save": "Save",
+    "createSuccess": "User type created successfully",
+    "updateSuccess": "User type updated successfully",
+    "deleteSuccess": "User type deleted successfully",
+    "deleteConfirmTitle": "Delete user type?",
+    "deleteConfirmDescription": "Are you sure you want to delete \"{name}\"? This action cannot be undone."
   }
 }

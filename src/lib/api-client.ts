@@ -1,0 +1,35 @@
+export interface ApiFieldError {
+  path: string;
+  message: string;
+}
+
+export type ApiResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; status: number; message: string; fields?: ApiFieldError[] };
+
+export async function apiRequest<T>(input: string, init?: RequestInit): Promise<ApiResult<T>> {
+  try {
+    const response = await fetch(input, {
+      ...init,
+      headers: {
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...init?.headers,
+      },
+    });
+
+    const json = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        status: response.status,
+        message: json?.error?.message ?? "Request failed",
+        fields: json?.error?.fields,
+      };
+    }
+
+    return { ok: true, data: json?.data as T };
+  } catch {
+    return { ok: false, status: 0, message: "Network error" };
+  }
+}

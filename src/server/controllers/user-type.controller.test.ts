@@ -3,6 +3,7 @@ import {
   createUserType,
   deleteUserType,
   getUserType,
+  listUserTypes,
   updateUserType,
 } from "./user-type.controller";
 import { resetForTests as resetUserTypes } from "@/server/store/user-type.store";
@@ -30,6 +31,33 @@ describe("createUserType", () => {
     if (result.ok) return;
     expect(result.status).toBe(400);
     expect(result.fields?.some((field) => field.path === "name")).toBe(true);
+  });
+
+  it("populates audit fields and defaults status to active", () => {
+    const result = createUserType({ name: "Admin" });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.status).toBe(1);
+    expect(result.data.createdBy).toBe("system");
+    expect(result.data.updatedBy).toBe("system");
+    expect(result.data.createdAt).toBe(result.data.updatedAt);
+    expect(new Date(result.data.createdAt).toISOString()).toBe(result.data.createdAt);
+  });
+
+  it("ignores client-supplied status/audit fields", () => {
+    const result = createUserType({
+      name: "Admin",
+      status: 2,
+      createdBy: "hacker",
+      updatedBy: "hacker",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.status).toBe(1);
+    expect(result.data.createdBy).toBe("system");
+    expect(result.data.updatedBy).toBe("system");
   });
 });
 
@@ -79,6 +107,33 @@ describe("updateUserType", () => {
     if (result.ok) return;
     expect(result.status).toBe(400);
   });
+
+  it("preserves createdAt/createdBy/status while refreshing updatedAt/updatedBy", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    const result = updateUserType(created.data.id, { name: "Super Admin" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.createdAt).toBe(created.data.createdAt);
+    expect(result.data.createdBy).toBe(created.data.createdBy);
+    expect(result.data.status).toBe(created.data.status);
+    expect(result.data.updatedBy).toBe("system");
+    expect(new Date(result.data.updatedAt).getTime()).toBeGreaterThanOrEqual(
+      new Date(created.data.updatedAt).getTime(),
+    );
+  });
+
+  it("returns 404 for a soft-deleted user type", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    deleteUserType(created.data.id);
+    const result = updateUserType(created.data.id, { name: "Whatever" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+  });
 });
 
 describe("deleteUserType", () => {
@@ -88,6 +143,39 @@ describe("deleteUserType", () => {
 
     const result = deleteUserType(created.data.id);
     expect(result.ok).toBe(true);
+  });
+
+  it("hides the user type from getUserType after deletion", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    deleteUserType(created.data.id);
+    const result = getUserType(created.data.id);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+  });
+
+  it("hides the user type from listUserTypes after deletion", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    deleteUserType(created.data.id);
+    const result = listUserTypes();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.some((userType) => userType.id === created.data.id)).toBe(false);
+  });
+
+  it("returns 404 when deleting an already-deleted user type", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    deleteUserType(created.data.id);
+    const result = deleteUserType(created.data.id);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
   });
 
   it("blocks deletion when referenced by a user", () => {

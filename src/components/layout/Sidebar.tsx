@@ -23,6 +23,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 export function Sidebar({
@@ -190,7 +191,7 @@ export function Sidebar({
                 </ListItemIcon>
                 <ListItemText primary={t("rolesAndGroups")} />
               </ListItemButton>
-              <ListItemButton sx={{ borderRadius: 1, pl: 4 }}>
+              <ListItemButton component={Link} href="/user-types" sx={{ borderRadius: 1, pl: 4 }}>
                 <ListItemIcon sx={{ minWidth: 36 }}>
                   <BadgeIcon fontSize="small" />
                 </ListItemIcon>
@@ -245,7 +246,7 @@ export function Sidebar({
                   </ListItemIcon>
                   <ListItemText primary={t("rolesAndGroups")} />
                 </ListItemButton>
-                <ListItemButton sx={{ borderRadius: 1 }}>
+                <ListItemButton component={Link} href="/user-types" sx={{ borderRadius: 1 }}>
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <BadgeIcon fontSize="small" />
                   </ListItemIcon>

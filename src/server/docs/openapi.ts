@@ -26,8 +26,21 @@ const userTypeSchema: OpenApiSchema = {
   properties: {
     id: { type: "integer" },
     ...userTypeInputJsonSchema.properties,
+    status: { type: "integer", enum: [1, 2] },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+    createdBy: { type: "string" },
+    updatedBy: { type: "string" },
   },
-  required: ["id", ...(userTypeInputJsonSchema.required ?? [])],
+  required: [
+    "id",
+    ...(userTypeInputJsonSchema.required ?? []),
+    "status",
+    "createdAt",
+    "updatedAt",
+    "createdBy",
+    "updatedBy",
+  ],
   additionalProperties: false,
 };
 
