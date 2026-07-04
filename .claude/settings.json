@@ -30,7 +30,18 @@
       "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*next*dev*'\\\\'' -or $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId, CommandLine')",
       "Bash(powershell -NoProfile -Command 'Stop-Process -Id 17204,4316,17308 -Force -ErrorAction SilentlyContinue; Start-Sleep -Milliseconds 500; Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*nova-pulse*'\\\\'' } | Select-Object ProcessId')",
       "Bash(ls -la src/app/docs)",
-      "Bash(ls -la src/app/swagger)"
+      "Bash(ls -la src/app/swagger)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@mui/material/package.json'\\).version\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/@mui/material-nextjs/package.json'\\).version\\)\")",
+      "WebFetch(domain:mui.com)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep -i \"error\\\\|disabled\" /tmp/nova-dev.log | head -40)",
+      "Read(//tmp/**)",
+      "Bash(npm ls *)",
+      "Bash(curl -s http://localhost:3000/login -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(rm -f /tmp/nova-dev.log /tmp/login-resp.html)",
+      "Bash(rm -rf .next)"
     ]
   }
 }
