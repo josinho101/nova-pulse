@@ -1,13 +1,17 @@
 import Typography from "@mui/material/Typography";
+import { getTranslations } from "next-intl/server";
 
-export default function DashboardHomePage() {
+export default async function DashboardHomePage() {
+  const t = await getTranslations("DashboardPage");
+  const tCommon = await getTranslations("Common");
+
   return (
     <>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-        Nova Pulse
+        {tCommon("appName")}
       </Typography>
       <Typography variant="body1" color="text.secondary">
-        Welcome back. Here is a quick overview of your pharmacy operations.
+        {t("welcomeMessage")}
       </Typography>
     </>
   );

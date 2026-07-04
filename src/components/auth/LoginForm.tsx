@@ -6,8 +6,11 @@ import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export function LoginForm() {
+  const t = useTranslations("LoginForm");
+
   return (
     <Box
       component="form"
@@ -18,7 +21,7 @@ export function LoginForm() {
         id="email"
         name="email"
         type="email"
-        label="Email address"
+        label={t("emailLabel")}
         autoComplete="email"
         fullWidth
       />
@@ -26,20 +29,20 @@ export function LoginForm() {
         id="password"
         name="password"
         type="password"
-        label="Password"
+        label={t("passwordLabel")}
         autoComplete="current-password"
         fullWidth
       />
 
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <FormControlLabel control={<Checkbox size="small" />} label="Remember me" />
+        <FormControlLabel control={<Checkbox size="small" />} label={t("rememberMe")} />
         <Link href="#" style={{ fontSize: 14 }}>
-          Forgot Password?
+          {t("forgotPassword")}
         </Link>
       </Box>
 
       <Button type="submit" variant="contained" size="large" fullWidth>
-        Sign In
+        {t("signIn")}
       </Button>
     </Box>
   );

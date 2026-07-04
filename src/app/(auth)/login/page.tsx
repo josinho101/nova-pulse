@@ -1,55 +1,53 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Divider from "@mui/material/Divider";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/LoginForm";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getTranslations("LoginPage");
+  const tCommon = await getTranslations("Common");
+
   return (
-    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, minHeight: "100vh" }}>
+    <Box
+      sx={{
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+        bgcolor: "background.paper",
+        overflow: "hidden",
+        px: 3,
+        py: 6,
+      }}
+    >
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "background.paper",
-          px: 3,
-          py: 6,
+          position: "absolute",
+          inset: 0,
+          color: "primary.main",
+          bgcolor: "currentcolor",
+          maskImage: "url(/login-background.svg)",
+          maskRepeat: "no-repeat",
+          maskPosition: "center",
+          maskSize: "cover",
+          WebkitMaskImage: "url(/login-background.svg)",
+          WebkitMaskRepeat: "no-repeat",
+          WebkitMaskPosition: "center",
+          WebkitMaskSize: "cover",
+          opacity: 0.2,
         }}
-      >
-        <Box sx={{ width: "100%", maxWidth: 360 }}>
-          <Typography variant="h6" color="primary" sx={{ fontWeight: 800 }}>
-            Nova Pulse
-          </Typography>
-          <Typography variant="h5" sx={{ mt: 3, fontWeight: 700 }}>
-            Sign In
-          </Typography>
+      />
+      <Box sx={{ position: "relative", width: "100%", maxWidth: 360 }}>
+        <Typography variant="h3" color="primary" sx={{ fontWeight: 800 }}>
+          {tCommon("appName")}
+        </Typography>
+        <Typography variant="h5" sx={{ mt: 3, fontWeight: 700 }}>
+          {t("signInHeading")}
+        </Typography>
 
-          <LoginForm />
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="caption" color="text.secondary">
-              or sign in with
-            </Typography>
-          </Divider>
-
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Button variant="outlined" fullWidth>
-              Google
-            </Button>
-            <Button variant="outlined" fullWidth>
-              Facebook
-            </Button>
-          </Box>
-
-          <Typography variant="body2" align="center" sx={{ mt: 3 }}>
-            Don&apos;t have an account? <Link href="#">Create an account</Link>
-          </Typography>
-        </Box>
+        <LoginForm />
       </Box>
-
-      <Box sx={{ display: { xs: "none", md: "block" }, bgcolor: "primary.main" }} />
     </Box>
   );
 }

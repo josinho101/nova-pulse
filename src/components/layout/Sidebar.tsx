@@ -1,3 +1,5 @@
+"use client";
+
 import Drawer from "@mui/material/Drawer";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -10,6 +12,7 @@ import ListItemText from "@mui/material/ListItemText";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import { useTranslations } from "next-intl";
 
 export function Sidebar({
   width,
@@ -20,6 +23,9 @@ export function Sidebar({
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  const t = useTranslations("Sidebar");
+  const tCommon = useTranslations("Common");
+
   return (
     <Drawer
       variant="permanent"
@@ -62,13 +68,13 @@ export function Sidebar({
             color="primary"
             sx={{ fontWeight: 800 }}
           >
-            Nova Pulse
+            {tCommon("appName")}
           </Typography>
         )}
-        <Tooltip title={collapsed ? "Expand" : "Collapse"}>
+        <Tooltip title={collapsed ? t("expand") : t("collapse")}>
           <IconButton
             onClick={onToggleCollapsed}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
             size="small"
             color="inherit"
           >
@@ -99,7 +105,7 @@ export function Sidebar({
           </ListItemIcon>
           {!collapsed && (
             <ListItemText
-              primary="Dashboard"
+              primary={t("dashboard")}
               slotProps={{
                 primary: { sx: { fontWeight: 600, color: "primary.main" } },
               }}

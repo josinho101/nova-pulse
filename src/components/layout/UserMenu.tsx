@@ -6,10 +6,12 @@ import Avatar from "@mui/material/Avatar";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import PersonIcon from "@mui/icons-material/Person";
+import { useTranslations } from "next-intl";
 
 export function UserMenu() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
+  const t = useTranslations("UserMenu");
 
   const handleOpen = (event: MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -21,14 +23,14 @@ export function UserMenu() {
 
   return (
     <>
-      <IconButton onClick={handleOpen} aria-label="Account menu" size="small">
+      <IconButton onClick={handleOpen} aria-label={t("accountMenuAria")} size="small">
         <Avatar sx={{ width: 32, height: 32 }}>
           <PersonIcon fontSize="small" />
         </Avatar>
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>Sign out</MenuItem>
+        <MenuItem onClick={handleClose}>{t("profile")}</MenuItem>
+        <MenuItem onClick={handleClose}>{t("signOut")}</MenuItem>
       </Menu>
     </>
   );

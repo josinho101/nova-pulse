@@ -1,0 +1,42 @@
+{
+  "Common": {
+    "appName": "Nova Pulse"
+  },
+  "RootLayout": {
+    "metadataDescription": "Pharmacy management application"
+  },
+  "LoginPage": {
+    "signInHeading": "Sign In",
+    "orSignInWith": "or sign in with",
+    "google": "Google",
+    "facebook": "Facebook",
+    "noAccount": "Don't have an account? ",
+    "createAccount": "Create an account"
+  },
+  "LoginForm": {
+    "emailLabel": "Email address",
+    "passwordLabel": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "signIn": "Sign In"
+  },
+  "DashboardPage": {
+    "welcomeMessage": "Welcome back. Here is a quick overview of your pharmacy operations."
+  },
+  "Sidebar": {
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "dashboard": "Dashboard"
+  },
+  "ThemeToggle": {
+    "switchTheme": "Switch theme",
+    "toggleThemeAria": "Toggle light and dark theme"
+  },
+  "UserMenu": {
+    "accountMenuAria": "Account menu",
+    "profile": "Profile",
+    "signOut": "Sign out"
+  }
+}
