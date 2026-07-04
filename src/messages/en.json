@@ -35,7 +35,13 @@
     "users": "Users",
     "usersList": "List",
     "rolesAndGroups": "Roles and Groups",
-    "userTypes": "User Types"
+    "userTypes": "User Types",
+    "patients": "Patients",
+    "doctors": "Doctors",
+    "stock": "Stock",
+    "purchase": "Purchase",
+    "reports": "Reports",
+    "profile": "Profile"
   },
   "ThemeToggle": {
     "switchTheme": "Switch theme",
