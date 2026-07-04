@@ -43,7 +43,11 @@
       "Bash(rm -f /tmp/nova-dev.log /tmp/login-resp.html)",
       "Bash(rm -rf .next)",
       "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)",
-      "PowerShell(npm run dev)"
+      "PowerShell(npm run dev)",
+      "Bash(npx eslint *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/users/roles-and-groups)",
+      "Bash(curl -s http://localhost:3000/users/roles-and-groups)",
+      "Bash(curl -s \"http://localhost:3000/user-types\")"
     ]
   }
 }

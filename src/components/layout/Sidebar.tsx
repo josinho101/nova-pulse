@@ -40,7 +40,9 @@ export function Sidebar({
   const tCommon = useTranslations("Common");
   const pathname = usePathname();
   const isUsersSectionActive =
-    pathname === "/users" || pathname === "/users/roles-and-groups" || pathname === "/user-types";
+    pathname === "/users" ||
+    pathname === "/users/roles-and-groups" ||
+    pathname === "/users/user-types";
   const [usersOpen, setUsersOpen] = useState(isUsersSectionActive);
   const [flyoutOpen, setFlyoutOpen] = useState(false);
   const usersButtonRef = useRef<HTMLDivElement>(null);
@@ -214,8 +216,8 @@ export function Sidebar({
               </ListItemButton>
               <ListItemButton
                 component={Link}
-                href="/user-types"
-                selected={pathname === "/user-types"}
+                href="/users/user-types"
+                selected={pathname === "/users/user-types"}
                 sx={{ borderRadius: 1, pl: 4 }}
               >
                 <ListItemIcon sx={{ minWidth: 36 }}>

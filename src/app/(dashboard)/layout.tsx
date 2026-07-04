@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 const SIDEBAR_WIDTH = 248;
 const SIDEBAR_WIDTH_COLLAPSED = 72;
@@ -36,6 +37,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         }}
       >
         <Toolbar />
+        <Breadcrumbs />
         {children}
       </Box>
     </Box>
