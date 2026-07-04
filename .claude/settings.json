@@ -41,7 +41,9 @@
       "Bash(npm ls *)",
       "Bash(curl -s http://localhost:3000/login -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
       "Bash(rm -f /tmp/nova-dev.log /tmp/login-resp.html)",
-      "Bash(rm -rf .next)"
+      "Bash(rm -rf .next)",
+      "PowerShell(npx tsc --noEmit -p tsconfig.json 2>&1)",
+      "PowerShell(npm run dev)"
     ]
   }
 }

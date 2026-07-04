@@ -28,7 +28,11 @@
     "collapse": "Collapse",
     "expandSidebar": "Expand sidebar",
     "collapseSidebar": "Collapse sidebar",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "usersList": "List",
+    "rolesAndGroups": "Roles and Groups",
+    "userTypes": "User Types"
   },
   "ThemeToggle": {
     "switchTheme": "Switch theme",
