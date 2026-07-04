@@ -1,5 +1,6 @@
-export const USER_TYPE_STATUS = { ACTIVE: 1, DELETED: 2 } as const;
-export type UserTypeStatus = (typeof USER_TYPE_STATUS)[keyof typeof USER_TYPE_STATUS];
+import { RECORD_STATUS, type RecordStatus } from "@/server/store/record-status";
+
+export type UserTypeStatus = RecordStatus;
 
 export interface UserTypeRecord {
   id: number;
@@ -15,7 +16,7 @@ let userTypes: UserTypeRecord[] = [];
 let nextUserTypeId = 1;
 
 function isActive(userType: UserTypeRecord): boolean {
-  return userType.status === USER_TYPE_STATUS.ACTIVE;
+  return userType.status === RECORD_STATUS.ACTIVE;
 }
 
 export function listUserTypes(): UserTypeRecord[] {
@@ -38,7 +39,7 @@ export function addUserType(record: { name: string }): UserTypeRecord {
   const created: UserTypeRecord = {
     id: nextUserTypeId++,
     name: record.name,
-    status: USER_TYPE_STATUS.ACTIVE,
+    status: RECORD_STATUS.ACTIVE,
     createdAt: now,
     updatedAt: now,
     createdBy: "system",
@@ -70,7 +71,7 @@ export function deleteUserType(id: number): boolean {
   const index = userTypes.findIndex((userType) => userType.id === id);
   userTypes[index] = {
     ...existing,
-    status: USER_TYPE_STATUS.DELETED,
+    status: RECORD_STATUS.DELETED,
     updatedAt: new Date().toISOString(),
     updatedBy: "system",
   };

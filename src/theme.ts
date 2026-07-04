@@ -34,6 +34,13 @@ const theme = createTheme({
     fontFamily: "var(--font-nunito-sans)",
   },
   shape: { borderRadius: 6 },
+  components: {
+    MuiDialog: {
+      styleOverrides: {
+        paper: ({ theme }) => theme.applyStyles("dark", { backgroundColor: "#000000" }),
+      },
+    },
+  },
 });
 
 export default theme;

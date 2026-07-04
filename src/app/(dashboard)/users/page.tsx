@@ -1,18 +1,153 @@
-import Typography from "@mui/material/Typography";
-import { getTranslations } from "next-intl/server";
+"use client";
 
-export default async function UsersListPage() {
-  const t = await getTranslations("Sidebar");
-  const tComingSoon = await getTranslations("ComingSoonPage");
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import AddIcon from "@mui/icons-material/Add";
+import { useTranslations } from "next-intl";
+import { useToast } from "@/components/common/Toast";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { UsersTable } from "@/components/users/UsersTable";
+import { deleteUser, listUsers, type User } from "@/lib/users-api";
+import { listUserTypes, type UserType } from "@/lib/user-types-api";
+
+export default function UsersListPage() {
+  const t = useTranslations("UsersPage");
+  const { notify, toast } = useToast();
+  const router = useRouter();
+
+  const [users, setUsers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [userTypes, setUserTypes] = useState<UserType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [confirmDeleteTarget, setConfirmDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [, startTransition] = useTransition();
+
+  const fetchUsers = useCallback(
+    async (signal?: AbortSignal) => {
+      const result = await listUsers(page + 1, pageSize, order, signal);
+      if (signal?.aborted) return;
+      if (result.ok) {
+        setUsers(result.data.items);
+        setTotal(result.data.total);
+      } else {
+        notify(result.message, "error");
+      }
+    },
+    [notify, page, pageSize, order],
+  );
+
+  const fetchUserTypes = useCallback(
+    async (signal?: AbortSignal) => {
+      const result = await listUserTypes(signal);
+      if (signal?.aborted) return;
+      if (result.ok) {
+        setUserTypes(result.data);
+      } else {
+        notify(result.message, "error");
+      }
+    },
+    [notify],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    startTransition(() => {
+      setLoading(true);
+      void Promise.all([fetchUsers(controller.signal), fetchUserTypes(controller.signal)]).finally(
+        () => {
+          if (!controller.signal.aborted) setLoading(false);
+        },
+      );
+    });
+    return () => controller.abort();
+  }, [fetchUsers, fetchUserTypes, startTransition]);
+
+  const userTypeNameById = useMemo(
+    () => new Map(userTypes.map((userType) => [userType.id, userType.name])),
+    [userTypes],
+  );
+
+  const handleAddClick = () => {
+    router.push("/users/new");
+  };
+
+  const handleEditClick = (user: User) => {
+    router.push(`/users/${user.id}/edit`);
+  };
+
+  const handleDeleteRequest = (user: User) => {
+    setConfirmDeleteTarget(user);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDeleteTarget) return;
+
+    setDeleting(true);
+    const result = await deleteUser(confirmDeleteTarget.id);
+    setDeleting(false);
+    setConfirmDeleteTarget(null);
+
+    if (result.ok) {
+      notify(t("deleteSuccess"), "success");
+      void fetchUsers();
+    } else {
+      notify(result.message, "error");
+    }
+  };
+
+  const confirmDeleteName = confirmDeleteTarget
+    ? `${confirmDeleteTarget.firstName} ${confirmDeleteTarget.lastName}`
+    : "";
 
   return (
     <>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-        {t("usersList")}
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        {tComingSoon("message")}
-      </Typography>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          {t("title")}
+        </Typography>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
+          {t("addButton")}
+        </Button>
+      </Box>
+
+      <UsersTable
+        users={users}
+        userTypeNameById={userTypeNameById}
+        loading={loading}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        order={order}
+        onEdit={handleEditClick}
+        onDeleteRequest={handleDeleteRequest}
+        onPageChange={setPage}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(0);
+        }}
+        onSortChange={(newOrder) => {
+          setOrder(newOrder);
+          setPage(0);
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteTarget !== null}
+        title={t("deleteConfirmTitle")}
+        description={t("deleteConfirmDescription", { name: confirmDeleteName })}
+        loading={deleting}
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => setConfirmDeleteTarget(null)}
+      />
+
+      {toast}
     </>
   );
 }

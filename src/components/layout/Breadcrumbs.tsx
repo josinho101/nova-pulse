@@ -16,6 +16,10 @@ type Crumb = {
 const ROUTE_CRUMBS: Record<string, Crumb[]> = {
   "/": [],
   "/users": [{ labelKey: "users", href: "/users" }],
+  "/users/new": [
+    { labelKey: "users", href: "/users" },
+    { labelKey: "addUser", href: "/users/new" },
+  ],
   "/users/roles-and-groups": [
     { labelKey: "users", href: "/users" },
     { labelKey: "rolesAndGroups", href: "/users/roles-and-groups" },
@@ -26,10 +30,19 @@ const ROUTE_CRUMBS: Record<string, Crumb[]> = {
   ],
 };
 
+const EDIT_USER_PATTERN = /^\/users\/[^/]+\/edit$/;
+
 export function Breadcrumbs() {
   const t = useTranslations("Sidebar");
   const pathname = usePathname();
-  const crumbs = ROUTE_CRUMBS[pathname];
+  const crumbs =
+    ROUTE_CRUMBS[pathname] ??
+    (EDIT_USER_PATTERN.test(pathname)
+      ? [
+          { labelKey: "users", href: "/users" },
+          { labelKey: "editUser", href: pathname },
+        ]
+      : undefined);
 
   if (!crumbs || crumbs.length === 0) {
     return null;

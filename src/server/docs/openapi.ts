@@ -16,8 +16,21 @@ const userSchema: OpenApiSchema = {
   properties: {
     id: { type: "string" },
     ...userInputJsonSchema.properties,
+    status: { type: "integer", enum: [1, 2] },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+    createdBy: { type: "string" },
+    updatedBy: { type: "string" },
   },
-  required: ["id", ...(userInputJsonSchema.required ?? [])],
+  required: [
+    "id",
+    ...(userInputJsonSchema.required ?? []),
+    "status",
+    "createdAt",
+    "updatedAt",
+    "createdBy",
+    "updatedBy",
+  ],
   additionalProperties: false,
 };
 
@@ -41,6 +54,18 @@ const userTypeSchema: OpenApiSchema = {
     "createdBy",
     "updatedBy",
   ],
+  additionalProperties: false,
+};
+
+const paginatedUsersSchema: OpenApiSchema = {
+  type: "object",
+  properties: {
+    items: { type: "array", items: { $ref: "#/components/schemas/User" } },
+    page: { type: "integer" },
+    pageSize: { type: "integer" },
+    total: { type: "integer" },
+  },
+  required: ["items", "page", "pageSize", "total"],
   additionalProperties: false,
 };
 
@@ -112,6 +137,27 @@ const userTypeIdParameter = {
   in: "path" as const,
   required: true,
   schema: { type: "integer" },
+};
+
+const pageParameter = {
+  name: "page",
+  in: "query" as const,
+  required: false,
+  schema: { type: "integer", default: 1 },
+};
+
+const pageSizeParameter = {
+  name: "pageSize",
+  in: "query" as const,
+  required: false,
+  schema: { type: "integer", default: 10 },
+};
+
+const sortOrderParameter = {
+  name: "sortOrder",
+  in: "query" as const,
+  required: false,
+  schema: { type: "string", enum: ["asc", "desc"], default: "asc" },
 };
 
 export function buildOpenApiDocument(): OpenApiDocument {
@@ -209,8 +255,12 @@ export function buildOpenApiDocument(): OpenApiDocument {
         get: {
           summary: "List users",
           tags: ["Users"],
+          parameters: [pageParameter, pageSizeParameter, sortOrderParameter],
           responses: {
-            "200": jsonResponse("List of users", dataListEnvelope("#/components/schemas/User")),
+            "200": jsonResponse(
+              "Paginated list of users",
+              dataEnvelope({ $ref: "#/components/schemas/PaginatedUsers" }),
+            ),
           },
         },
         post: {
@@ -277,6 +327,7 @@ export function buildOpenApiDocument(): OpenApiDocument {
       schemas: {
         UserInput: userInputJsonSchema,
         User: userSchema,
+        PaginatedUsers: paginatedUsersSchema,
         UserTypeInput: userTypeInputJsonSchema,
         UserType: userTypeSchema,
         ApiFieldError: apiFieldErrorSchema,

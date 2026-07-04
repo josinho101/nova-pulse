@@ -16,8 +16,8 @@ export interface UserTypeInput {
 
 const BASE_URL = "/api/v1/user-types";
 
-export function listUserTypes(): Promise<ApiResult<UserType[]>> {
-  return apiRequest<UserType[]>(BASE_URL);
+export function listUserTypes(signal?: AbortSignal): Promise<ApiResult<UserType[]>> {
+  return apiRequest<UserType[]>(BASE_URL, { signal });
 }
 
 export function createUserType(input: UserTypeInput): Promise<ApiResult<UserType>> {

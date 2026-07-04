@@ -8,6 +8,7 @@ import {
   updateUser as updateUserRecord,
 } from "@/server/store/user.store";
 import { userTypeExists } from "@/server/store/user-type.store";
+import type { RecordStatus } from "@/server/store/record-status";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
 
 export const userInputSchema = z.object({
@@ -24,7 +25,22 @@ export type UserInput = z.infer<typeof userInputSchema>;
 
 export interface User extends UserInput {
   id: string;
+  status: RecordStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 }
+
+export interface PaginatedUsers {
+  items: User[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
 
 function toFieldErrors(error: z.ZodError) {
   return error.issues.map((issue) => ({
@@ -33,8 +49,23 @@ function toFieldErrors(error: z.ZodError) {
   }));
 }
 
-export function listUsers(): ApiResult<User[]> {
-  return ok(listUserRecords());
+export function listUsers(
+  page: number = DEFAULT_PAGE,
+  pageSize: number = DEFAULT_PAGE_SIZE,
+  sortOrder: "asc" | "desc" = "asc",
+): ApiResult<PaginatedUsers> {
+  const safePage = Number.isInteger(page) && page > 0 ? page : DEFAULT_PAGE;
+  const safePageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
+
+  const sorted = [...listUserRecords()].sort((a, b) => {
+    const comparison = a.lastName.localeCompare(b.lastName);
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  const start = (safePage - 1) * safePageSize;
+  const items = sorted.slice(start, start + safePageSize);
+
+  return ok({ items, page: safePage, pageSize: safePageSize, total: sorted.length });
 }
 
 export function getUser(id: string): ApiResult<User> {
@@ -59,8 +90,7 @@ export function createUser(input: unknown): ApiResult<User> {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const created: User = { id: crypto.randomUUID(), ...parsed.data };
-  addUser(created);
+  const created = addUser(parsed.data);
   return ok(created);
 }
 
@@ -82,9 +112,8 @@ export function updateUser(id: string, input: unknown): ApiResult<User> {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const updated: User = { id, ...parsed.data };
-  updateUserRecord(id, updated);
-  return ok(updated);
+  const updated = updateUserRecord(id, parsed.data);
+  return ok(updated!);
 }
 
 export function deleteUser(id: string): ApiResult<null> {

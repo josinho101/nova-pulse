@@ -7,7 +7,7 @@ import {
   updateUserType,
 } from "./user-type.controller";
 import { resetForTests as resetUserTypes } from "@/server/store/user-type.store";
-import { addUser, resetForTests as resetUsers } from "@/server/store/user.store";
+import { addUser, deleteUser, resetForTests as resetUsers } from "@/server/store/user.store";
 
 beforeEach(() => {
   resetUserTypes();
@@ -242,7 +242,6 @@ describe("deleteUserType", () => {
     if (!created.ok) throw new Error("setup failed");
 
     addUser({
-      id: "user-1",
       firstName: "Jane",
       lastName: "Doe",
       dob: "1990-01-01",
@@ -255,6 +254,24 @@ describe("deleteUserType", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(409);
+  });
+
+  it("does not block deleting the referenced UserType after the user is soft-deleted", () => {
+    const created = createUserType({ name: "Admin" });
+    if (!created.ok) throw new Error("setup failed");
+
+    const user = addUser({
+      firstName: "Jane",
+      lastName: "Doe",
+      dob: "1990-01-01",
+      address: "123 Main St",
+      email: "jane@example.com",
+      typeId: created.data.id,
+    });
+
+    deleteUser(user.id);
+    const result = deleteUserType(created.data.id);
+    expect(result.ok).toBe(true);
   });
 
   it("returns 404 for a nonexistent id", () => {

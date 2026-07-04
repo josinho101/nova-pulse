@@ -35,6 +35,33 @@ describe("buildOpenApiDocument", () => {
     expect(schema.required).not.toContain("middleName");
   });
 
+  it("documents status/audit fields on the User schema", () => {
+    const doc = buildOpenApiDocument();
+    const schema = doc.components.schemas.User!;
+
+    expect(schema.required).toEqual(
+      expect.arrayContaining(["status", "createdAt", "updatedAt", "createdBy", "updatedBy"]),
+    );
+  });
+
+  it("documents pagination query parameters on the users list endpoint", () => {
+    const doc = buildOpenApiDocument();
+    const params = doc.paths["/api/v1/users"]!.get!.parameters!;
+
+    expect(params.map((param) => param.name)).toEqual(
+      expect.arrayContaining(["page", "pageSize", "sortOrder"]),
+    );
+  });
+
+  it("documents the PaginatedUsers response schema on the users list endpoint", () => {
+    const doc = buildOpenApiDocument();
+    const schema = doc.components.schemas.PaginatedUsers!;
+
+    expect(schema.required).toEqual(
+      expect.arrayContaining(["items", "page", "pageSize", "total"]),
+    );
+  });
+
   it("documents the health endpoint's unwrapped response shape", () => {
     const doc = buildOpenApiDocument();
     const okResponseSchema =
