@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <Box sx={{ display: "flex" }}>
-      <Header sidebarWidth={sidebarWidth} />
+      <Header />
       <Sidebar
         width={sidebarWidth}
         collapsed={collapsed}

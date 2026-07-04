@@ -47,7 +47,9 @@
       "Bash(npx eslint *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/users/roles-and-groups)",
       "Bash(curl -s http://localhost:3000/users/roles-and-groups)",
-      "Bash(curl -s \"http://localhost:3000/user-types\")"
+      "Bash(curl -s \"http://localhost:3000/user-types\")",
+      "Bash(rm -rf .next/types)",
+      "Bash(npx next *)"
     ]
   }
 }

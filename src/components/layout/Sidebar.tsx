@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import Drawer from "@mui/material/Drawer";
-import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -52,7 +51,6 @@ export function Sidebar({
   onToggleCollapsed: () => void;
 }) {
   const t = useTranslations("Sidebar");
-  const tCommon = useTranslations("Common");
   const pathname = usePathname();
   const isUsersSectionActive =
     pathname === "/users" ||
@@ -89,6 +87,8 @@ export function Sidebar({
           }),
         [`& .MuiDrawer-paper`]: {
           width,
+          top: 64,
+          height: "calc(100% - 64px)",
           overflowX: "hidden",
           boxSizing: "border-box",
           bgcolor: "background.paper",
@@ -102,24 +102,15 @@ export function Sidebar({
         },
       }}
     >
-      <Toolbar
+      <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: collapsed ? "center" : "space-between",
+          justifyContent: collapsed ? "center" : "flex-end",
+          px: 1,
+          minHeight: 48,
         }}
       >
-        {!collapsed && (
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            color="primary"
-            sx={{ fontWeight: 800 }}
-          >
-            {tCommon("appName")}
-          </Typography>
-        )}
         <Tooltip title={collapsed ? t("expand") : t("collapse")}>
           <IconButton
             onClick={onToggleCollapsed}
@@ -134,7 +125,7 @@ export function Sidebar({
             )}
           </IconButton>
         </Tooltip>
-      </Toolbar>
+      </Box>
       <List sx={{ px: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
         <ListItemButton
           component={Link}
