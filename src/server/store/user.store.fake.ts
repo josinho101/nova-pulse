@@ -11,8 +11,18 @@ export function resetForTests(): void {
   users = [];
 }
 
-export async function listUsers(): Promise<UserRecord[]> {
-  return users.filter(isActive);
+export async function listUsers(search?: string): Promise<UserRecord[]> {
+  const active = users.filter(isActive);
+  if (!search) return active;
+
+  const needle = search.toLowerCase();
+  return active.filter(
+    (user) =>
+      user.firstName.toLowerCase().includes(needle) ||
+      user.lastName.toLowerCase().includes(needle) ||
+      user.email.toLowerCase().includes(needle) ||
+      (user.phone ?? "").toLowerCase().includes(needle),
+  );
 }
 
 export async function getUserById(id: string): Promise<UserRecord | undefined> {

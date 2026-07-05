@@ -5,13 +5,17 @@ import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
 import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/components/common/Toast";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { UsersTable } from "@/components/users/UsersTable";
 import { deleteUser, listUsers, type User, type UserSortField } from "@/lib/users-api";
 import { listUserTypes, type UserType } from "@/lib/user-types-api";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 export default function UsersListPage() {
   const t = useTranslations("UsersPage");
@@ -24,6 +28,8 @@ export default function UsersListPage() {
   const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState<UserSortField>("firstName");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDeleteTarget, setConfirmDeleteTarget] = useState<User | null>(null);
@@ -32,7 +38,7 @@ export default function UsersListPage() {
 
   const fetchUsers = useCallback(
     async (signal?: AbortSignal) => {
-      const result = await listUsers(page + 1, pageSize, sortBy, sortOrder, signal);
+      const result = await listUsers(page + 1, pageSize, sortBy, sortOrder, debouncedSearch, signal);
       if (signal?.aborted) return;
       if (result.ok) {
         setUsers(result.data.items);
@@ -41,7 +47,7 @@ export default function UsersListPage() {
         notify(result.message, "error");
       }
     },
-    [notify, page, pageSize, sortBy, sortOrder],
+    [notify, page, pageSize, sortBy, sortOrder, debouncedSearch],
   );
 
   const fetchUserTypes = useCallback(
@@ -69,6 +75,10 @@ export default function UsersListPage() {
     });
     return () => controller.abort();
   }, [fetchUsers, fetchUserTypes, startTransition]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch]);
 
   const userTypeNameById = useMemo(
     () => new Map(userTypes.map((userType) => [userType.id, userType.name])),
@@ -113,9 +123,27 @@ export default function UsersListPage() {
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           {t("title")}
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
-          {t("addButton")}
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <TextField
+            size="small"
+            placeholder={t("searchPlaceholder")}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            sx={{ width: 360 }}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddClick}>
+            {t("addButton")}
+          </Button>
+        </Box>
       </Box>
 
       <UsersTable

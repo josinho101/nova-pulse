@@ -16,7 +16,8 @@ export const userInputSchema = z.object({
   lastName: z.string().trim().min(1, "lastName is required"),
   middleName: z.string().trim().min(1).optional(),
   dob: z.iso.date("dob must be a valid ISO date (YYYY-MM-DD)"),
-  address: z.string().trim().min(1, "address is required"),
+  address: z.string().trim().min(1).optional(),
+  phone: z.string().trim().regex(/^[0-9]+$/, "phone must contain digits only").optional(),
   email: z.email("email must be a valid email address"),
   typeId: z.number().int("typeId must be an integer"),
 });
@@ -77,12 +78,13 @@ export async function listUsers(
   pageSize: number = DEFAULT_PAGE_SIZE,
   sortBy: UserSortField = DEFAULT_SORT_FIELD,
   sortOrder: "asc" | "desc" = "asc",
+  search: string = "",
 ): Promise<ApiResult<PaginatedUsers>> {
   const safePage = Number.isInteger(page) && page > 0 ? page : DEFAULT_PAGE;
   const safePageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
   const safeSortBy = USER_SORT_FIELDS.includes(sortBy) ? sortBy : DEFAULT_SORT_FIELD;
 
-  const records = await listUserRecords();
+  const records = await listUserRecords(search.trim() || undefined);
   const userTypeNamePairs = await Promise.all(
     records.map(
       async (record) => [record.typeId, (await getUserTypeById(record.typeId))?.name ?? ""] as const,

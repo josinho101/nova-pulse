@@ -7,7 +7,8 @@ export interface UserRecord {
   lastName: string;
   middleName?: string;
   dob: string;
-  address: string;
+  address?: string;
+  phone?: string;
   email: string;
   typeId: number;
   status: RecordStatus;
@@ -22,7 +23,8 @@ export interface UserInputRecord {
   lastName: string;
   middleName?: string;
   dob: string;
-  address: string;
+  address?: string;
+  phone?: string;
   email: string;
   typeId: number;
 }
@@ -33,7 +35,8 @@ interface UserRow {
   last_name: string;
   middle_name: string | null;
   dob: string | Date;
-  address: string;
+  address: string | null;
+  phone: string | null;
   email: string;
   type_id: number;
   status: number;
@@ -54,7 +57,8 @@ function toRecord(row: UserRow): UserRecord {
     lastName: row.last_name,
     middleName: row.middle_name ?? undefined,
     dob: toDateOnly(row.dob),
-    address: row.address,
+    address: row.address ?? undefined,
+    phone: row.phone ?? undefined,
     email: row.email,
     typeId: row.type_id,
     status: row.status as RecordStatus,
@@ -65,8 +69,8 @@ function toRecord(row: UserRow): UserRecord {
   };
 }
 
-export async function listUsers(): Promise<UserRecord[]> {
-  const result = await pool.query<UserRow>("SELECT * FROM sp_list_users()");
+export async function listUsers(search?: string): Promise<UserRecord[]> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_list_users($1)", [search ?? null]);
   return result.rows.map(toRecord);
 }
 
@@ -88,13 +92,14 @@ export async function findUserByEmail(
 
 export async function addUser(record: UserInputRecord): Promise<UserRecord> {
   const result = await pool.query<UserRow>(
-    "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7)",
+    "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8)",
     [
       record.firstName,
       record.lastName,
       record.middleName ?? null,
       record.dob,
-      record.address,
+      record.address ?? null,
+      record.phone ?? null,
       record.email,
       record.typeId,
     ],
@@ -107,14 +112,15 @@ export async function updateUser(
   changes: UserInputRecord,
 ): Promise<UserRecord | undefined> {
   const result = await pool.query<UserRow>(
-    "SELECT * FROM sp_update_user($1, $2, $3, $4, $5, $6, $7, $8)",
+    "SELECT * FROM sp_update_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     [
       id,
       changes.firstName,
       changes.lastName,
       changes.middleName ?? null,
       changes.dob,
-      changes.address,
+      changes.address ?? null,
+      changes.phone ?? null,
       changes.email,
       changes.typeId,
     ],

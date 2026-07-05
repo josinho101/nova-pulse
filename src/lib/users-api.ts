@@ -6,7 +6,8 @@ export interface User {
   lastName: string;
   middleName?: string;
   dob: string;
-  address: string;
+  address?: string;
+  phone?: string;
   email: string;
   typeId: number;
   status: 1 | 2;
@@ -21,7 +22,8 @@ export interface UserInput {
   lastName: string;
   middleName?: string;
   dob: string;
-  address: string;
+  address?: string;
+  phone?: string;
   email: string;
   typeId: number;
 }
@@ -50,6 +52,7 @@ export function listUsers(
   pageSize: number = 10,
   sortBy: UserSortField = "lastName",
   sortOrder: "asc" | "desc" = "asc",
+  search: string = "",
   signal?: AbortSignal,
 ): Promise<ApiResult<PaginatedUsers>> {
   const params = new URLSearchParams({
@@ -58,6 +61,7 @@ export function listUsers(
     sortBy,
     sortOrder,
   });
+  if (search.trim()) params.set("search", search.trim());
   return apiRequest<PaginatedUsers>(`${BASE_URL}?${params.toString()}`, { signal });
 }
 

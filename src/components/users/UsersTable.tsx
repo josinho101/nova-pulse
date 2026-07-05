@@ -82,6 +82,7 @@ export function UsersTable({
                   ["firstName", "columnFirstName"],
                   ["lastName", "columnLastName"],
                   ["email", "columnEmail"],
+                  ["phone", "columnPhone"],
                   ["userType", "columnUserType"],
                   ["createdAt", "columnCreatedAt"],
                   ["updatedAt", "columnUpdatedAt"],
@@ -105,13 +106,13 @@ export function UsersTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                   <CircularProgress size={28} />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
                   <Typography color="text.secondary">{t("noUsers")}</Typography>
                 </TableCell>
               </TableRow>
@@ -139,6 +140,7 @@ export function UsersTable({
                     </Link>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone ?? "-"}</TableCell>
                   <TableCell>{userTypeNameById.get(user.typeId) ?? "-"}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDateTime(user.createdAt)}

@@ -28,11 +28,13 @@ interface FieldErrors {
   lastName?: string;
   dob?: string;
   address?: string;
+  phone?: string;
   email?: string;
   typeId?: string;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9]+$/;
 
 function TabPanel({ value, index, children }: { value: number; index: number; children: ReactNode }) {
   return (
@@ -53,6 +55,7 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
   const [middleName, setMiddleName] = useState(user?.middleName ?? "");
   const [dob, setDob] = useState(user?.dob ?? "");
   const [address, setAddress] = useState(user?.address ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [typeId, setTypeId] = useState<number | "">(user?.typeId ?? "");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -71,13 +74,14 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
     const trimmedFirstName = firstName.trim();
     const trimmedLastName = lastName.trim();
     const trimmedAddress = address.trim();
+    const trimmedPhone = phone.trim();
     const trimmedEmail = email.trim();
 
     const errors: FieldErrors = {};
     if (!trimmedFirstName) errors.firstName = t("firstNameRequired");
     if (!trimmedLastName) errors.lastName = t("lastNameRequired");
     if (!dob) errors.dob = t("dobRequired");
-    if (!trimmedAddress) errors.address = t("addressRequired");
+    if (trimmedPhone && !PHONE_PATTERN.test(trimmedPhone)) errors.phone = t("phoneInvalid");
     if (!trimmedEmail) errors.email = t("emailRequired");
     else if (!EMAIL_PATTERN.test(trimmedEmail)) errors.email = t("emailInvalid");
     if (typeId === "") errors.typeId = t("userTypeRequired");
@@ -96,7 +100,8 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
       lastName: trimmedLastName,
       middleName: middleName.trim() || undefined,
       dob,
-      address: trimmedAddress,
+      address: trimmedAddress || undefined,
+      phone: trimmedPhone || undefined,
       email: trimmedEmail,
       typeId: typeId as number,
     };
@@ -112,7 +117,15 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
       return;
     }
 
-    const knownFields = ["firstName", "lastName", "dob", "address", "email", "typeId"] as const;
+    const knownFields = [
+      "firstName",
+      "lastName",
+      "dob",
+      "address",
+      "phone",
+      "email",
+      "typeId",
+    ] as const;
     const nextFieldErrors: FieldErrors = {};
     for (const field of result.fields ?? []) {
       if ((knownFields as readonly string[]).includes(field.path)) {
@@ -238,6 +251,20 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
                       </MenuItem>
                     ))}
                   </TextField>
+                </Box>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label={t("phoneLabel")}
+                    value={phone}
+                    onChange={(event) => {
+                      setPhone(event.target.value);
+                      clearFieldError("phone");
+                    }}
+                    error={!!fieldErrors.phone}
+                    helperText={fieldErrors.phone ?? " "}
+                    disabled={submitting}
+                  />
                 </Box>
                 <TextField
                   fullWidth

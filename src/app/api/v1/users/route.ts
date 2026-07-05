@@ -19,8 +19,9 @@ export async function GET(request: NextRequest) {
   const requestedSortBy = searchParams.get("sortBy") as UserSortField | null;
   const sortBy = requestedSortBy && SORT_FIELDS.includes(requestedSortBy) ? requestedSortBy : "lastName";
   const sortOrder = searchParams.get("sortOrder") === "desc" ? "desc" : "asc";
+  const search = searchParams.get("search") ?? "";
 
-  const result = await listUsers(page, pageSize, sortBy, sortOrder);
+  const result = await listUsers(page, pageSize, sortBy, sortOrder, search);
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
   }

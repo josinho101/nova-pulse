@@ -85,6 +85,43 @@ describe("createUser", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("succeeds without address since it is optional", async () => {
+    const userType = await createTestUserType();
+    const input = baseInput(userType.id) as Record<string, unknown>;
+    delete input.address;
+
+    const result = await createUser(input);
+    expect(result.ok).toBe(true);
+  });
+
+  it("succeeds without phone since it is optional", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser(baseInput(userType.id));
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.phone).toBeUndefined();
+  });
+
+  it("succeeds with a valid numeric phone", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser({ ...baseInput(userType.id), phone: "5551234567" });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.phone).toBe("5551234567");
+  });
+
+  it("rejects a non-numeric phone", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser({ ...baseInput(userType.id), phone: "555-CALL" });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.fields?.some((field) => field.path === "phone")).toBe(true);
+  });
+
   it("rejects an invalid email format", async () => {
     const userType = await createTestUserType();
     const result = await createUser({ ...baseInput(userType.id), email: "not-an-email" });
@@ -275,6 +312,49 @@ describe("listUsers", () => {
     if (!result.ok) return;
     expect(result.data.page).toBe(1);
     expect(result.data.pageSize).toBe(10);
+  });
+
+  it("filters by search across firstName, lastName, email, and phone", async () => {
+    const userType = await createTestUserType();
+    await createUser({
+      ...baseInput(userType.id),
+      firstName: "Alice",
+      lastName: "Anderson",
+      email: "alice@example.com",
+      phone: "1112223333",
+    });
+    await createUser({
+      ...baseInput(userType.id),
+      firstName: "Bob",
+      lastName: "Baker",
+      email: "bob@example.com",
+      phone: "4445556666",
+    });
+
+    const byFirstName = await listUsers(1, 10, "firstName", "asc", "alice");
+    expect(byFirstName.ok).toBe(true);
+    if (!byFirstName.ok) return;
+    expect(byFirstName.data.items.map((user) => user.firstName)).toEqual(["Alice"]);
+
+    const byLastName = await listUsers(1, 10, "firstName", "asc", "BAKER");
+    expect(byLastName.ok).toBe(true);
+    if (!byLastName.ok) return;
+    expect(byLastName.data.items.map((user) => user.lastName)).toEqual(["Baker"]);
+
+    const byEmail = await listUsers(1, 10, "firstName", "asc", "bob@example");
+    expect(byEmail.ok).toBe(true);
+    if (!byEmail.ok) return;
+    expect(byEmail.data.items).toHaveLength(1);
+
+    const byPhone = await listUsers(1, 10, "firstName", "asc", "222333");
+    expect(byPhone.ok).toBe(true);
+    if (!byPhone.ok) return;
+    expect(byPhone.data.items.map((user) => user.firstName)).toEqual(["Alice"]);
+
+    const noSearch = await listUsers(1, 10, "firstName", "asc", "");
+    expect(noSearch.ok).toBe(true);
+    if (!noSearch.ok) return;
+    expect(noSearch.data.items).toHaveLength(2);
   });
 });
 
