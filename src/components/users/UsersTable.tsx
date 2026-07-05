@@ -15,6 +15,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
@@ -117,8 +118,26 @@ export function UsersTable({
             ) : (
               users.map((user) => (
                 <TableRow key={user.id} hover>
-                  <TableCell>{user.firstName}</TableCell>
-                  <TableCell>{user.lastName}</TableCell>
+                  <TableCell>
+                    <Link
+                      component="button"
+                      type="button"
+                      underline="hover"
+                      onClick={() => onEdit(user)}
+                    >
+                      {user.firstName}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <Link
+                      component="button"
+                      type="button"
+                      underline="hover"
+                      onClick={() => onEdit(user)}
+                    >
+                      {user.lastName}
+                    </Link>
+                  </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{userTypeNameById.get(user.typeId) ?? "-"}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
