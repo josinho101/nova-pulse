@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createUserType, listUserTypes } from "@/server/controllers/user-type.controller";
 
 export async function GET() {
-  const result = listUserTypes();
+  const result = await listUserTypes();
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
   }
@@ -11,7 +11,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const result = createUserType(body);
+  const result = await createUserType(body);
 
   if (!result.ok) {
     return NextResponse.json(

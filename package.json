@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "migrate": "node-pg-migrate --envPath .env",
+    "migrate:up": "npm run migrate up",
+    "migrate:down": "npm run migrate down"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -18,6 +21,7 @@
     "@mui/material-nextjs": "^9.1.1",
     "next": "16.2.10",
     "next-intl": "^4.13.1",
+    "pg": "^8.22.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
@@ -26,12 +30,15 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "jsdom": "^28.1.0",
+    "node-pg-migrate": "^8.0.4",
     "typescript": "^5",
     "vitest": "^4.1.9"
   }

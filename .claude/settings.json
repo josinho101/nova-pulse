@@ -54,7 +54,10 @@
       "Bash(curl -s http://localhost:3000 --max-time 3)",
       "Bash(curl -s -L http://localhost:3000/login --max-time 3 -o /tmp/page.html)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} -> %{url_effective}\\\\n\" -L http://localhost:3000/users/user-types --max-time 5)",
-      "Bash(npx --yes playwright@1.61.1 install chromium --with-deps)"
+      "Bash(npx --yes playwright@1.61.1 install chromium --with-deps)",
+      "PowerShell(npm install pg node-pg-migrate)",
+      "PowerShell(npm install -D @types/pg)",
+      "Bash(npx node-pg-migrate *)"
     ]
   }
 }

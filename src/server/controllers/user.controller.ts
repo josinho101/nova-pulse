@@ -72,20 +72,23 @@ function toFieldErrors(error: z.ZodError) {
   }));
 }
 
-export function listUsers(
+export async function listUsers(
   page: number = DEFAULT_PAGE,
   pageSize: number = DEFAULT_PAGE_SIZE,
   sortBy: UserSortField = DEFAULT_SORT_FIELD,
   sortOrder: "asc" | "desc" = "asc",
-): ApiResult<PaginatedUsers> {
+): Promise<ApiResult<PaginatedUsers>> {
   const safePage = Number.isInteger(page) && page > 0 ? page : DEFAULT_PAGE;
   const safePageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
   const safeSortBy = USER_SORT_FIELDS.includes(sortBy) ? sortBy : DEFAULT_SORT_FIELD;
 
-  const records = listUserRecords();
-  const userTypeNameById = new Map(
-    records.map((record) => [record.typeId, getUserTypeById(record.typeId)?.name ?? ""]),
+  const records = await listUserRecords();
+  const userTypeNamePairs = await Promise.all(
+    records.map(
+      async (record) => [record.typeId, (await getUserTypeById(record.typeId))?.name ?? ""] as const,
+    ),
   );
+  const userTypeNameById = new Map(userTypeNamePairs);
 
   const compareBy = (user: User): string => {
     if (safeSortBy === "userType") return userTypeNameById.get(user.typeId) ?? "";
@@ -103,56 +106,56 @@ export function listUsers(
   return ok({ items, page: safePage, pageSize: safePageSize, total: sorted.length });
 }
 
-export function getUser(id: string): ApiResult<User> {
-  const user = getUserById(id);
+export async function getUser(id: string): Promise<ApiResult<User>> {
+  const user = await getUserById(id);
   if (!user) return fail(404, "User not found");
   return ok(user);
 }
 
-export function createUser(input: unknown): ApiResult<User> {
+export async function createUser(input: unknown): Promise<ApiResult<User>> {
   const parsed = userInputSchema.safeParse(input);
   if (!parsed.success) {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  if (!userTypeExists(parsed.data.typeId)) {
+  if (!(await userTypeExists(parsed.data.typeId))) {
     return fail(400, "Validation failed", [
       { path: "typeId", message: "Referenced UserType does not exist" },
     ]);
   }
 
-  if (findUserByEmail(parsed.data.email)) {
+  if (await findUserByEmail(parsed.data.email)) {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const created = addUser(parsed.data);
+  const created = await addUser(parsed.data);
   return ok(created);
 }
 
-export function updateUser(id: string, input: unknown): ApiResult<User> {
-  if (!getUserById(id)) return fail(404, "User not found");
+export async function updateUser(id: string, input: unknown): Promise<ApiResult<User>> {
+  if (!(await getUserById(id))) return fail(404, "User not found");
 
   const parsed = userInputSchema.safeParse(input);
   if (!parsed.success) {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  if (!userTypeExists(parsed.data.typeId)) {
+  if (!(await userTypeExists(parsed.data.typeId))) {
     return fail(400, "Validation failed", [
       { path: "typeId", message: "Referenced UserType does not exist" },
     ]);
   }
 
-  if (findUserByEmail(parsed.data.email, id)) {
+  if (await findUserByEmail(parsed.data.email, id)) {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const updated = updateUserRecord(id, parsed.data);
+  const updated = await updateUserRecord(id, parsed.data);
   return ok(updated!);
 }
 
-export function deleteUser(id: string): ApiResult<null> {
-  if (!getUserById(id)) return fail(404, "User not found");
-  deleteUserRecord(id);
+export async function deleteUser(id: string): Promise<ApiResult<null>> {
+  if (!(await getUserById(id))) return fail(404, "User not found");
+  await deleteUserRecord(id);
   return ok(null);
 }

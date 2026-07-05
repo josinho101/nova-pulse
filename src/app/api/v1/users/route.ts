@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const sortBy = requestedSortBy && SORT_FIELDS.includes(requestedSortBy) ? requestedSortBy : "lastName";
   const sortOrder = searchParams.get("sortOrder") === "desc" ? "desc" : "asc";
 
-  const result = listUsers(page, pageSize, sortBy, sortOrder);
+  const result = await listUsers(page, pageSize, sortBy, sortOrder);
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
   }
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const result = createUser(body);
+  const result = await createUser(body);
 
   if (!result.ok) {
     return NextResponse.json(

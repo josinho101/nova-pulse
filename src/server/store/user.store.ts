@@ -1,3 +1,4 @@
+import { pool } from "@/server/db/pool";
 import { RECORD_STATUS, type RecordStatus } from "@/server/store/record-status";
 
 export interface UserRecord {
@@ -16,21 +17,6 @@ export interface UserRecord {
   updatedBy: string;
 }
 
-let users: UserRecord[] = [];
-
-function isActive(user: UserRecord): boolean {
-  return user.status === RECORD_STATUS.ACTIVE;
-}
-
-export function listUsers(): UserRecord[] {
-  return users.filter(isActive);
-}
-
-export function getUserById(id: string): UserRecord | undefined {
-  const user = users.find((candidate) => candidate.id === id);
-  return user && isActive(user) ? user : undefined;
-}
-
 export interface UserInputRecord {
   firstName: string;
   lastName: string;
@@ -41,62 +27,118 @@ export interface UserInputRecord {
   typeId: number;
 }
 
-export function addUser(record: UserInputRecord): UserRecord {
-  const now = new Date().toISOString();
-  const created: UserRecord = {
-    id: crypto.randomUUID(),
-    ...record,
-    status: RECORD_STATUS.ACTIVE,
-    createdAt: now,
-    updatedAt: now,
-    createdBy: "system",
-    updatedBy: "system",
+interface UserRow {
+  id: string;
+  first_name: string;
+  last_name: string;
+  middle_name: string | null;
+  dob: string | Date;
+  address: string;
+  email: string;
+  type_id: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
+function toDateOnly(dob: string | Date): string {
+  return dob instanceof Date ? dob.toISOString().slice(0, 10) : dob;
+}
+
+function toRecord(row: UserRow): UserRecord {
+  return {
+    id: row.id,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    middleName: row.middle_name ?? undefined,
+    dob: toDateOnly(row.dob),
+    address: row.address,
+    email: row.email,
+    typeId: row.type_id,
+    status: row.status as RecordStatus,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString(),
+    createdBy: row.created_by,
+    updatedBy: row.updated_by,
   };
-  users.push(created);
-  return created;
 }
 
-export function updateUser(id: string, changes: UserInputRecord): UserRecord | undefined {
-  const existing = getUserById(id);
-  if (!existing) return undefined;
-
-  const index = users.findIndex((user) => user.id === id);
-  const updated: UserRecord = {
-    ...existing,
-    ...changes,
-    updatedAt: new Date().toISOString(),
-    updatedBy: "system",
-  };
-  users[index] = updated;
-  return updated;
+export async function listUsers(): Promise<UserRecord[]> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_list_users()");
+  return result.rows.map(toRecord);
 }
 
-export function deleteUser(id: string): boolean {
-  const existing = getUserById(id);
-  if (!existing) return false;
-
-  const index = users.findIndex((user) => user.id === id);
-  users[index] = {
-    ...existing,
-    status: RECORD_STATUS.DELETED,
-    updatedAt: new Date().toISOString(),
-    updatedBy: "system",
-  };
-  return true;
+export async function getUserById(id: string): Promise<UserRecord | undefined> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_get_user($1)", [id]);
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export function findUserByEmail(email: string, excludeId?: string): UserRecord | undefined {
-  return users.find((user) => isActive(user) && user.email === email && user.id !== excludeId);
+export async function findUserByEmail(
+  email: string,
+  excludeId?: string,
+): Promise<UserRecord | undefined> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_find_user_by_email($1, $2)", [
+    email,
+    excludeId ?? null,
+  ]);
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export function isUserTypeReferenced(typeId: number): boolean {
-  return users.some((user) => isActive(user) && user.typeId === typeId);
+export async function addUser(record: UserInputRecord): Promise<UserRecord> {
+  const result = await pool.query<UserRow>(
+    "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7)",
+    [
+      record.firstName,
+      record.lastName,
+      record.middleName ?? null,
+      record.dob,
+      record.address,
+      record.email,
+      record.typeId,
+    ],
+  );
+  return toRecord(result.rows[0]);
 }
 
-export function userExists(id: string): boolean {
-  return getUserById(id) !== undefined;
+export async function updateUser(
+  id: string,
+  changes: UserInputRecord,
+): Promise<UserRecord | undefined> {
+  const result = await pool.query<UserRow>(
+    "SELECT * FROM sp_update_user($1, $2, $3, $4, $5, $6, $7, $8)",
+    [
+      id,
+      changes.firstName,
+      changes.lastName,
+      changes.middleName ?? null,
+      changes.dob,
+      changes.address,
+      changes.email,
+      changes.typeId,
+    ],
+  );
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export function resetForTests(): void {
-  users = [];
+export async function deleteUser(id: string): Promise<boolean> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_delete_user($1)", [id]);
+  return result.rows.length > 0;
+}
+
+export async function isUserTypeReferenced(typeId: number): Promise<boolean> {
+  const result = await pool.query("SELECT 1 FROM users WHERE type_id = $1 AND status = $2 LIMIT 1", [
+    typeId,
+    RECORD_STATUS.ACTIVE,
+  ]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function userExists(id: string): Promise<boolean> {
+  return (await getUserById(id)) !== undefined;
+}
+
+export async function resetForTests(): Promise<void> {
+  await pool.query("TRUNCATE TABLE users, user_types RESTART IDENTITY CASCADE");
 }

@@ -3,7 +3,7 @@ import { deleteUser, getUser, updateUser } from "@/server/controllers/user.contr
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = getUser(id);
+  const result = await getUser(id);
 
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await request.json();
-  const result = updateUser(id, body);
+  const result = await updateUser(id, body);
 
   if (!result.ok) {
     return NextResponse.json(
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const result = deleteUser(id);
+  const result = await deleteUser(id);
 
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });

@@ -6,9 +6,9 @@ import {
   getUserTypeById,
   listUserTypes as listUserTypeRecords,
   updateUserType as updateUserTypeRecord,
+  UserTypeReferencedError,
   type UserTypeStatus,
 } from "@/server/store/user-type.store";
-import { isUserTypeReferenced } from "@/server/store/user.store";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
 
 export const userTypeInputSchema = z.object({
@@ -37,53 +37,57 @@ function toFieldErrors(error: z.ZodError) {
   }));
 }
 
-export function listUserTypes(): ApiResult<UserType[]> {
-  return ok(listUserTypeRecords());
+export async function listUserTypes(): Promise<ApiResult<UserType[]>> {
+  return ok(await listUserTypeRecords());
 }
 
-export function getUserType(id: number): ApiResult<UserType> {
-  const userType = getUserTypeById(id);
+export async function getUserType(id: number): Promise<ApiResult<UserType>> {
+  const userType = await getUserTypeById(id);
   if (!userType) return fail(404, "UserType not found");
   return ok(userType);
 }
 
-export function createUserType(input: unknown): ApiResult<UserType> {
+export async function createUserType(input: unknown): Promise<ApiResult<UserType>> {
   const parsed = userTypeInputSchema.safeParse(input);
   if (!parsed.success) {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  if (findUserTypeByName(parsed.data.name)) {
+  if (await findUserTypeByName(parsed.data.name)) {
     return fail(409, "Conflict", [{ path: "name", message: "Name is already in use" }]);
   }
 
-  const created = addUserType(parsed.data);
+  const created = await addUserType(parsed.data);
   return ok(created);
 }
 
-export function updateUserType(id: number, input: unknown): ApiResult<UserType> {
-  if (!getUserTypeById(id)) return fail(404, "UserType not found");
+export async function updateUserType(id: number, input: unknown): Promise<ApiResult<UserType>> {
+  if (!(await getUserTypeById(id))) return fail(404, "UserType not found");
 
   const parsed = userTypeInputSchema.safeParse(input);
   if (!parsed.success) {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
   }
 
-  if (findUserTypeByName(parsed.data.name, id)) {
+  if (await findUserTypeByName(parsed.data.name, id)) {
     return fail(409, "Conflict", [{ path: "name", message: "Name is already in use" }]);
   }
 
-  const updated = updateUserTypeRecord(id, parsed.data);
+  const updated = await updateUserTypeRecord(id, parsed.data);
   return ok(updated!);
 }
 
-export function deleteUserType(id: number): ApiResult<null> {
-  if (!getUserTypeById(id)) return fail(404, "UserType not found");
+export async function deleteUserType(id: number): Promise<ApiResult<null>> {
+  if (!(await getUserTypeById(id))) return fail(404, "UserType not found");
 
-  if (isUserTypeReferenced(id)) {
-    return fail(409, "UserType is referenced by one or more users and cannot be deleted");
+  try {
+    await deleteUserTypeRecord(id);
+  } catch (error) {
+    if (error instanceof UserTypeReferencedError) {
+      return fail(409, "UserType is referenced by one or more users and cannot be deleted");
+    }
+    throw error;
   }
 
-  deleteUserTypeRecord(id);
   return ok(null);
 }

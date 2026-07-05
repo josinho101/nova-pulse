@@ -1,16 +1,57 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createUser, deleteUser, getUser, listUsers, updateUser } from "./user.controller";
-import { resetForTests as resetUsers } from "@/server/store/user.store";
-import { resetForTests as resetUserTypes } from "@/server/store/user-type.store";
 import { createUserType } from "./user-type.controller";
 
-beforeEach(() => {
-  resetUsers();
-  resetUserTypes();
+vi.mock("@/server/store/user.store", async () => {
+  const actual = await vi.importActual<typeof import("@/server/store/user.store")>(
+    "@/server/store/user.store",
+  );
+  const fake = await import("@/server/store/user.store.fake");
+
+  return {
+    ...actual,
+    resetForTests: fake.resetForTests,
+    listUsers: fake.listUsers,
+    getUserById: fake.getUserById,
+    findUserByEmail: fake.findUserByEmail,
+    addUser: fake.addUser,
+    updateUser: fake.updateUser,
+    deleteUser: fake.deleteUser,
+    isUserTypeReferenced: fake.isUserTypeReferenced,
+    userExists: fake.userExists,
+  };
 });
 
-function createTestUserType() {
-  const result = createUserType({ name: "Admin" });
+vi.mock("@/server/store/user-type.store", async () => {
+  const actual = await vi.importActual<typeof import("@/server/store/user-type.store")>(
+    "@/server/store/user-type.store",
+  );
+  const fake = await import("@/server/store/user-type.store.fake");
+  const { isUserTypeReferenced } = await import("@/server/store/user.store");
+
+  return {
+    ...actual,
+    resetForTests: fake.resetForTests,
+    listUserTypes: fake.listUserTypes,
+    getUserTypeById: fake.getUserTypeById,
+    findUserTypeByName: fake.findUserTypeByName,
+    addUserType: fake.addUserType,
+    updateUserType: fake.updateUserType,
+    userTypeExists: fake.userTypeExists,
+    deleteUserType: fake.makeDeleteUserType(isUserTypeReferenced, actual.UserTypeReferencedError),
+  };
+});
+
+const { resetForTests: resetUsers } = await import("@/server/store/user.store");
+const { resetForTests: resetUserTypes } = await import("@/server/store/user-type.store");
+
+beforeEach(async () => {
+  await resetUsers();
+  await resetUserTypes();
+});
+
+async function createTestUserType() {
+  const result = await createUserType({ name: "Admin" });
   if (!result.ok) throw new Error("setup failed");
   return result.data;
 }
@@ -27,9 +68,9 @@ function baseInput(typeId: number) {
 }
 
 describe("createUser", () => {
-  it("creates a user with a generated id", () => {
-    const userType = createTestUserType();
-    const result = createUser(baseInput(userType.id));
+  it("creates a user with a generated id", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser(baseInput(userType.id));
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -37,16 +78,16 @@ describe("createUser", () => {
     expect(result.data.email).toBe("jane@example.com");
   });
 
-  it("succeeds without middleName since it is optional", () => {
-    const userType = createTestUserType();
-    const result = createUser(baseInput(userType.id));
+  it("succeeds without middleName since it is optional", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser(baseInput(userType.id));
 
     expect(result.ok).toBe(true);
   });
 
-  it("rejects an invalid email format", () => {
-    const userType = createTestUserType();
-    const result = createUser({ ...baseInput(userType.id), email: "not-an-email" });
+  it("rejects an invalid email format", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser({ ...baseInput(userType.id), email: "not-an-email" });
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -54,20 +95,20 @@ describe("createUser", () => {
     expect(result.fields?.some((field) => field.path === "email")).toBe(true);
   });
 
-  it("rejects a missing required field", () => {
-    const userType = createTestUserType();
+  it("rejects a missing required field", async () => {
+    const userType = await createTestUserType();
     const input = baseInput(userType.id) as Record<string, unknown>;
     delete input.firstName;
 
-    const result = createUser(input);
+    const result = await createUser(input);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
     expect(result.fields?.some((field) => field.path === "firstName")).toBe(true);
   });
 
-  it("rejects a typeId that does not reference an existing UserType", () => {
-    const result = createUser(baseInput(999999));
+  it("rejects a typeId that does not reference an existing UserType", async () => {
+    const result = await createUser(baseInput(999999));
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -75,20 +116,20 @@ describe("createUser", () => {
     expect(result.fields?.some((field) => field.path === "typeId")).toBe(true);
   });
 
-  it("rejects a duplicate email", () => {
-    const userType = createTestUserType();
-    createUser(baseInput(userType.id));
+  it("rejects a duplicate email", async () => {
+    const userType = await createTestUserType();
+    await createUser(baseInput(userType.id));
 
-    const result = createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id));
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(409);
     expect(result.fields?.some((field) => field.path === "email")).toBe(true);
   });
 
-  it("populates audit fields and defaults status to active", () => {
-    const userType = createTestUserType();
-    const result = createUser(baseInput(userType.id));
+  it("populates audit fields and defaults status to active", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser(baseInput(userType.id));
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -99,9 +140,9 @@ describe("createUser", () => {
     expect(new Date(result.data.createdAt).toISOString()).toBe(result.data.createdAt);
   });
 
-  it("ignores client-supplied status/audit fields", () => {
-    const userType = createTestUserType();
-    const result = createUser({
+  it("ignores client-supplied status/audit fields", async () => {
+    const userType = await createTestUserType();
+    const result = await createUser({
       ...baseInput(userType.id),
       status: 2,
       createdBy: "hacker",
@@ -117,13 +158,13 @@ describe("createUser", () => {
 });
 
 describe("listUsers", () => {
-  it("defaults to page 1 with a page size of 10", () => {
-    const userType = createTestUserType();
+  it("defaults to page 1 with a page size of 10", async () => {
+    const userType = await createTestUserType();
     for (let i = 0; i < 15; i++) {
-      createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
+      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
     }
 
-    const result = listUsers();
+    const result = await listUsers();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.page).toBe(1);
@@ -132,52 +173,52 @@ describe("listUsers", () => {
     expect(result.data.items).toHaveLength(10);
   });
 
-  it("returns the requested page", () => {
-    const userType = createTestUserType();
+  it("returns the requested page", async () => {
+    const userType = await createTestUserType();
     for (let i = 0; i < 15; i++) {
-      createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
+      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
     }
 
-    const result = listUsers(2, 10);
+    const result = await listUsers(2, 10);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.page).toBe(2);
     expect(result.data.items).toHaveLength(5);
   });
 
-  it("sorts by lastName according to sortOrder", () => {
-    const userType = createTestUserType();
-    createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
-    createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
+  it("sorts by lastName according to sortOrder", async () => {
+    const userType = await createTestUserType();
+    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
+    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
 
-    const ascending = listUsers(1, 10, "lastName", "asc");
+    const ascending = await listUsers(1, 10, "lastName", "asc");
     expect(ascending.ok).toBe(true);
     if (!ascending.ok) return;
     expect(ascending.data.items.map((user) => user.lastName)).toEqual(["Alpha", "Zeta"]);
 
-    const descending = listUsers(1, 10, "lastName", "desc");
+    const descending = await listUsers(1, 10, "lastName", "desc");
     expect(descending.ok).toBe(true);
     if (!descending.ok) return;
     expect(descending.data.items.map((user) => user.lastName)).toEqual(["Zeta", "Alpha"]);
   });
 
-  it("sorts by firstName", () => {
-    const userType = createTestUserType();
-    createUser({ ...baseInput(userType.id), firstName: "Zeta", email: "zeta@example.com" });
-    createUser({ ...baseInput(userType.id), firstName: "Alpha", email: "alpha@example.com" });
+  it("sorts by firstName", async () => {
+    const userType = await createTestUserType();
+    await createUser({ ...baseInput(userType.id), firstName: "Zeta", email: "zeta@example.com" });
+    await createUser({ ...baseInput(userType.id), firstName: "Alpha", email: "alpha@example.com" });
 
-    const result = listUsers(1, 10, "firstName", "asc");
+    const result = await listUsers(1, 10, "firstName", "asc");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.items.map((user) => user.firstName)).toEqual(["Alpha", "Zeta"]);
   });
 
-  it("sorts by email", () => {
-    const userType = createTestUserType();
-    createUser({ ...baseInput(userType.id), email: "zeta@example.com" });
-    createUser({ ...baseInput(userType.id), email: "alpha@example.com" });
+  it("sorts by email", async () => {
+    const userType = await createTestUserType();
+    await createUser({ ...baseInput(userType.id), email: "zeta@example.com" });
+    await createUser({ ...baseInput(userType.id), email: "alpha@example.com" });
 
-    const result = listUsers(1, 10, "email", "asc");
+    const result = await listUsers(1, 10, "email", "asc");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.items.map((user) => user.email)).toEqual([
@@ -186,15 +227,15 @@ describe("listUsers", () => {
     ]);
   });
 
-  it("sorts by userType using the resolved type name, not typeId", () => {
-    const zetaType = createUserType({ name: "Zeta Type" });
-    const alphaType = createUserType({ name: "Alpha Type" });
+  it("sorts by userType using the resolved type name, not typeId", async () => {
+    const zetaType = await createUserType({ name: "Zeta Type" });
+    const alphaType = await createUserType({ name: "Alpha Type" });
     if (!zetaType.ok || !alphaType.ok) throw new Error("setup failed");
 
-    createUser({ ...baseInput(zetaType.data.id), email: "a@example.com" });
-    createUser({ ...baseInput(alphaType.data.id), email: "b@example.com" });
+    await createUser({ ...baseInput(zetaType.data.id), email: "a@example.com" });
+    await createUser({ ...baseInput(alphaType.data.id), email: "b@example.com" });
 
-    const result = listUsers(1, 10, "userType", "asc");
+    const result = await listUsers(1, 10, "userType", "asc");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.items.map((user) => user.typeId)).toEqual([
@@ -203,33 +244,33 @@ describe("listUsers", () => {
     ]);
   });
 
-  it("sorts by createdAt/updatedAt/createdBy/updatedBy", () => {
-    const userType = createTestUserType();
-    createUser({ ...baseInput(userType.id), email: "first@example.com" });
-    createUser({ ...baseInput(userType.id), email: "second@example.com" });
+  it("sorts by createdAt/updatedAt/createdBy/updatedBy", async () => {
+    const userType = await createTestUserType();
+    await createUser({ ...baseInput(userType.id), email: "first@example.com" });
+    await createUser({ ...baseInput(userType.id), email: "second@example.com" });
 
     for (const field of ["createdAt", "updatedAt", "createdBy", "updatedBy"] as const) {
-      const result = listUsers(1, 10, field, "asc");
+      const result = await listUsers(1, 10, field, "asc");
       expect(result.ok).toBe(true);
     }
   });
 
-  it("falls back to lastName sort for an invalid sortBy value", () => {
-    const userType = createTestUserType();
-    createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
-    createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
+  it("falls back to lastName sort for an invalid sortBy value", async () => {
+    const userType = await createTestUserType();
+    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
+    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
 
-    const result = listUsers(1, 10, "notAField" as never, "asc");
+    const result = await listUsers(1, 10, "notAField" as never, "asc");
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.items.map((user) => user.lastName)).toEqual(["Alpha", "Zeta"]);
   });
 
-  it("falls back to defaults for invalid page/pageSize values", () => {
-    const userType = createTestUserType();
-    createUser(baseInput(userType.id));
+  it("falls back to defaults for invalid page/pageSize values", async () => {
+    const userType = await createTestUserType();
+    await createUser(baseInput(userType.id));
 
-    const result = listUsers(0, -5);
+    const result = await listUsers(0, -5);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.page).toBe(1);
@@ -238,17 +279,17 @@ describe("listUsers", () => {
 });
 
 describe("getUser", () => {
-  it("returns the matching user", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("returns the matching user", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = getUser(created.data.id);
+    const result = await getUser(created.data.id);
     expect(result.ok).toBe(true);
   });
 
-  it("returns 404 for a nonexistent id", () => {
-    const result = getUser("missing-id");
+  it("returns 404 for a nonexistent id", async () => {
+    const result = await getUser("missing-id");
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -256,12 +297,12 @@ describe("getUser", () => {
 });
 
 describe("updateUser", () => {
-  it("updates an existing user", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("updates an existing user", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = updateUser(created.data.id, {
+    const result = await updateUser(created.data.id, {
       ...baseInput(userType.id),
       lastName: "Smith",
     });
@@ -271,22 +312,22 @@ describe("updateUser", () => {
     expect(result.data.lastName).toBe("Smith");
   });
 
-  it("returns 404 for a nonexistent id", () => {
-    const userType = createTestUserType();
-    const result = updateUser("missing-id", baseInput(userType.id));
+  it("returns 404 for a nonexistent id", async () => {
+    const userType = await createTestUserType();
+    const result = await updateUser("missing-id", baseInput(userType.id));
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
   });
 
-  it("rejects updating to another user's email", () => {
-    const userType = createTestUserType();
-    const first = createUser(baseInput(userType.id));
+  it("rejects updating to another user's email", async () => {
+    const userType = await createTestUserType();
+    const first = await createUser(baseInput(userType.id));
     if (!first.ok) throw new Error("setup failed");
-    const second = createUser({ ...baseInput(userType.id), email: "other@example.com" });
+    const second = await createUser({ ...baseInput(userType.id), email: "other@example.com" });
     if (!second.ok) throw new Error("setup failed");
 
-    const result = updateUser(second.data.id, {
+    const result = await updateUser(second.data.id, {
       ...baseInput(userType.id),
       email: "jane@example.com",
     });
@@ -296,21 +337,21 @@ describe("updateUser", () => {
     expect(result.status).toBe(409);
   });
 
-  it("allows updating a user back to its own current email", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("allows updating a user back to its own current email", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = updateUser(created.data.id, baseInput(userType.id));
+    const result = await updateUser(created.data.id, baseInput(userType.id));
     expect(result.ok).toBe(true);
   });
 
-  it("rejects an update with a bad typeId", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("rejects an update with a bad typeId", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = updateUser(created.data.id, {
+    const result = await updateUser(created.data.id, {
       ...baseInput(userType.id),
       typeId: 999999,
     });
@@ -320,12 +361,12 @@ describe("updateUser", () => {
     expect(result.status).toBe(400);
   });
 
-  it("preserves createdAt/createdBy/status while refreshing updatedAt/updatedBy", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("preserves createdAt/createdBy/status while refreshing updatedAt/updatedBy", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = updateUser(created.data.id, {
+    const result = await updateUser(created.data.id, {
       ...baseInput(userType.id),
       lastName: "Smith",
     });
@@ -341,13 +382,13 @@ describe("updateUser", () => {
     );
   });
 
-  it("returns 404 for a soft-deleted user", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("returns 404 for a soft-deleted user", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    deleteUser(created.data.id);
-    const result = updateUser(created.data.id, baseInput(userType.id));
+    await deleteUser(created.data.id);
+    const result = await updateUser(created.data.id, baseInput(userType.id));
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -355,53 +396,53 @@ describe("updateUser", () => {
 });
 
 describe("deleteUser", () => {
-  it("deletes an existing user", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("deletes an existing user", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    const result = deleteUser(created.data.id);
+    const result = await deleteUser(created.data.id);
     expect(result.ok).toBe(true);
   });
 
-  it("returns 404 for a nonexistent id", () => {
-    const result = deleteUser("missing-id");
+  it("returns 404 for a nonexistent id", async () => {
+    const result = await deleteUser("missing-id");
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
   });
 
-  it("hides the user from getUser after deletion", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("hides the user from getUser after deletion", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    deleteUser(created.data.id);
-    const result = getUser(created.data.id);
+    await deleteUser(created.data.id);
+    const result = await getUser(created.data.id);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
   });
 
-  it("hides the user from listUsers after deletion", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("hides the user from listUsers after deletion", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    deleteUser(created.data.id);
-    const result = listUsers();
+    await deleteUser(created.data.id);
+    const result = await listUsers();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.items.some((user) => user.id === created.data.id)).toBe(false);
   });
 
-  it("returns 404 when deleting an already-deleted user", () => {
-    const userType = createTestUserType();
-    const created = createUser(baseInput(userType.id));
+  it("returns 404 when deleting an already-deleted user", async () => {
+    const userType = await createTestUserType();
+    const created = await createUser(baseInput(userType.id));
     if (!created.ok) throw new Error("setup failed");
 
-    deleteUser(created.data.id);
-    const result = deleteUser(created.data.id);
+    await deleteUser(created.data.id);
+    const result = await deleteUser(created.data.id);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);

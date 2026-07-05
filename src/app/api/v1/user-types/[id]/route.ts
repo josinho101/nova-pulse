@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   const parsedId = parseId(id);
   if (parsedId === null) return invalidIdResponse();
 
-  const result = getUserType(parsedId);
+  const result = await getUserType(parsedId);
 
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (parsedId === null) return invalidIdResponse();
 
   const body = await request.json();
-  const result = updateUserType(parsedId, body);
+  const result = await updateUserType(parsedId, body);
 
   if (!result.ok) {
     return NextResponse.json(
@@ -51,7 +51,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   const parsedId = parseId(id);
   if (parsedId === null) return invalidIdResponse();
 
-  const result = deleteUserType(parsedId);
+  const result = await deleteUserType(parsedId);
 
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });
