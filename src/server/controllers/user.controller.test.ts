@@ -150,15 +150,79 @@ describe("listUsers", () => {
     createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
     createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
 
-    const ascending = listUsers(1, 10, "asc");
+    const ascending = listUsers(1, 10, "lastName", "asc");
     expect(ascending.ok).toBe(true);
     if (!ascending.ok) return;
     expect(ascending.data.items.map((user) => user.lastName)).toEqual(["Alpha", "Zeta"]);
 
-    const descending = listUsers(1, 10, "desc");
+    const descending = listUsers(1, 10, "lastName", "desc");
     expect(descending.ok).toBe(true);
     if (!descending.ok) return;
     expect(descending.data.items.map((user) => user.lastName)).toEqual(["Zeta", "Alpha"]);
+  });
+
+  it("sorts by firstName", () => {
+    const userType = createTestUserType();
+    createUser({ ...baseInput(userType.id), firstName: "Zeta", email: "zeta@example.com" });
+    createUser({ ...baseInput(userType.id), firstName: "Alpha", email: "alpha@example.com" });
+
+    const result = listUsers(1, 10, "firstName", "asc");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.items.map((user) => user.firstName)).toEqual(["Alpha", "Zeta"]);
+  });
+
+  it("sorts by email", () => {
+    const userType = createTestUserType();
+    createUser({ ...baseInput(userType.id), email: "zeta@example.com" });
+    createUser({ ...baseInput(userType.id), email: "alpha@example.com" });
+
+    const result = listUsers(1, 10, "email", "asc");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.items.map((user) => user.email)).toEqual([
+      "alpha@example.com",
+      "zeta@example.com",
+    ]);
+  });
+
+  it("sorts by userType using the resolved type name, not typeId", () => {
+    const zetaType = createUserType({ name: "Zeta Type" });
+    const alphaType = createUserType({ name: "Alpha Type" });
+    if (!zetaType.ok || !alphaType.ok) throw new Error("setup failed");
+
+    createUser({ ...baseInput(zetaType.data.id), email: "a@example.com" });
+    createUser({ ...baseInput(alphaType.data.id), email: "b@example.com" });
+
+    const result = listUsers(1, 10, "userType", "asc");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.items.map((user) => user.typeId)).toEqual([
+      alphaType.data.id,
+      zetaType.data.id,
+    ]);
+  });
+
+  it("sorts by createdAt/updatedAt/createdBy/updatedBy", () => {
+    const userType = createTestUserType();
+    createUser({ ...baseInput(userType.id), email: "first@example.com" });
+    createUser({ ...baseInput(userType.id), email: "second@example.com" });
+
+    for (const field of ["createdAt", "updatedAt", "createdBy", "updatedBy"] as const) {
+      const result = listUsers(1, 10, field, "asc");
+      expect(result.ok).toBe(true);
+    }
+  });
+
+  it("falls back to lastName sort for an invalid sortBy value", () => {
+    const userType = createTestUserType();
+    createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
+    createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
+
+    const result = listUsers(1, 10, "notAField" as never, "asc");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.items.map((user) => user.lastName)).toEqual(["Alpha", "Zeta"]);
   });
 
   it("falls back to defaults for invalid page/pageSize values", () => {

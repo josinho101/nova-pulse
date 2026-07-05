@@ -30,8 +30,11 @@ export interface UserTypesTableProps {
 
 const DEFAULT_ROWS_PER_PAGE = 10;
 
+type UserTypeSortField = "name" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy";
+
 export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: UserTypesTableProps) {
   const t = useTranslations("UserTypesPage");
+  const [sortBy, setSortBy] = useState<UserTypeSortField>("name");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
@@ -39,17 +42,22 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
   const sortedRows = useMemo(() => {
     const rows = [...userTypes];
     rows.sort((a, b) => {
-      const comparison = a.name.localeCompare(b.name);
+      const comparison = a[sortBy].localeCompare(b[sortBy]);
       return order === "asc" ? comparison : -comparison;
     });
     return rows;
-  }, [userTypes, order]);
+  }, [userTypes, sortBy, order]);
 
   const maxPage = Math.max(0, Math.ceil(sortedRows.length / rowsPerPage) - 1);
   const currentPage = Math.min(page, maxPage);
 
-  const handleSort = () => {
-    setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  const handleSort = (field: UserTypeSortField) => {
+    if (field === sortBy) {
+      setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setOrder("asc");
+    }
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -72,15 +80,51 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sortDirection={order}>
-                <TableSortLabel active direction={order} onClick={handleSort}>
+              <TableCell sortDirection={sortBy === "name" ? order : false}>
+                <TableSortLabel
+                  active={sortBy === "name"}
+                  direction={sortBy === "name" ? order : "asc"}
+                  onClick={() => handleSort("name")}
+                >
                   {t("columnName")}
                 </TableSortLabel>
               </TableCell>
-              <TableCell>{t("columnCreatedAt")}</TableCell>
-              <TableCell>{t("columnUpdatedAt")}</TableCell>
-              <TableCell>{t("columnCreatedBy")}</TableCell>
-              <TableCell>{t("columnUpdatedBy")}</TableCell>
+              <TableCell sortDirection={sortBy === "createdAt" ? order : false}>
+                <TableSortLabel
+                  active={sortBy === "createdAt"}
+                  direction={sortBy === "createdAt" ? order : "asc"}
+                  onClick={() => handleSort("createdAt")}
+                >
+                  {t("columnCreatedAt")}
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={sortBy === "updatedAt" ? order : false}>
+                <TableSortLabel
+                  active={sortBy === "updatedAt"}
+                  direction={sortBy === "updatedAt" ? order : "asc"}
+                  onClick={() => handleSort("updatedAt")}
+                >
+                  {t("columnUpdatedAt")}
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={sortBy === "createdBy" ? order : false}>
+                <TableSortLabel
+                  active={sortBy === "createdBy"}
+                  direction={sortBy === "createdBy" ? order : "asc"}
+                  onClick={() => handleSort("createdBy")}
+                >
+                  {t("columnCreatedBy")}
+                </TableSortLabel>
+              </TableCell>
+              <TableCell sortDirection={sortBy === "updatedBy" ? order : false}>
+                <TableSortLabel
+                  active={sortBy === "updatedBy"}
+                  direction={sortBy === "updatedBy" ? order : "asc"}
+                  onClick={() => handleSort("updatedBy")}
+                >
+                  {t("columnUpdatedBy")}
+                </TableSortLabel>
+              </TableCell>
               <TableCell align="right">{t("columnActions")}</TableCell>
             </TableRow>
           </TableHead>

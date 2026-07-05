@@ -160,6 +160,26 @@ const sortOrderParameter = {
   schema: { type: "string", enum: ["asc", "desc"], default: "asc" },
 };
 
+const sortByParameter = {
+  name: "sortBy",
+  in: "query" as const,
+  required: false,
+  schema: {
+    type: "string",
+    enum: [
+      "firstName",
+      "lastName",
+      "email",
+      "userType",
+      "createdAt",
+      "updatedAt",
+      "createdBy",
+      "updatedBy",
+    ],
+    default: "lastName",
+  },
+};
+
 export function buildOpenApiDocument(): OpenApiDocument {
   return {
     openapi: "3.0.3",
@@ -255,7 +275,7 @@ export function buildOpenApiDocument(): OpenApiDocument {
         get: {
           summary: "List users",
           tags: ["Users"],
-          parameters: [pageParameter, pageSizeParameter, sortOrderParameter],
+          parameters: [pageParameter, pageSizeParameter, sortByParameter, sortOrderParameter],
           responses: {
             "200": jsonResponse(
               "Paginated list of users",

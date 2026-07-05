@@ -7,7 +7,7 @@ import {
   listUsers as listUserRecords,
   updateUser as updateUserRecord,
 } from "@/server/store/user.store";
-import { userTypeExists } from "@/server/store/user-type.store";
+import { getUserTypeById, userTypeExists } from "@/server/store/user-type.store";
 import type { RecordStatus } from "@/server/store/record-status";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
 
@@ -42,6 +42,29 @@ export interface PaginatedUsers {
 const DEFAULT_PAGE = 1;
 const DEFAULT_PAGE_SIZE = 10;
 
+export type UserSortField =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "userType"
+  | "createdAt"
+  | "updatedAt"
+  | "createdBy"
+  | "updatedBy";
+
+const USER_SORT_FIELDS: UserSortField[] = [
+  "firstName",
+  "lastName",
+  "email",
+  "userType",
+  "createdAt",
+  "updatedAt",
+  "createdBy",
+  "updatedBy",
+];
+
+const DEFAULT_SORT_FIELD: UserSortField = "lastName";
+
 function toFieldErrors(error: z.ZodError) {
   return error.issues.map((issue) => ({
     path: issue.path.join("."),
@@ -52,13 +75,25 @@ function toFieldErrors(error: z.ZodError) {
 export function listUsers(
   page: number = DEFAULT_PAGE,
   pageSize: number = DEFAULT_PAGE_SIZE,
+  sortBy: UserSortField = DEFAULT_SORT_FIELD,
   sortOrder: "asc" | "desc" = "asc",
 ): ApiResult<PaginatedUsers> {
   const safePage = Number.isInteger(page) && page > 0 ? page : DEFAULT_PAGE;
   const safePageSize = Number.isInteger(pageSize) && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
+  const safeSortBy = USER_SORT_FIELDS.includes(sortBy) ? sortBy : DEFAULT_SORT_FIELD;
 
-  const sorted = [...listUserRecords()].sort((a, b) => {
-    const comparison = a.lastName.localeCompare(b.lastName);
+  const records = listUserRecords();
+  const userTypeNameById = new Map(
+    records.map((record) => [record.typeId, getUserTypeById(record.typeId)?.name ?? ""]),
+  );
+
+  const compareBy = (user: User): string => {
+    if (safeSortBy === "userType") return userTypeNameById.get(user.typeId) ?? "";
+    return user[safeSortBy];
+  };
+
+  const sorted = [...records].sort((a, b) => {
+    const comparison = compareBy(a).localeCompare(compareBy(b));
     return sortOrder === "asc" ? comparison : -comparison;
   });
 

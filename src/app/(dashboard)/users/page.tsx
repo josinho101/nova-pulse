@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { useToast } from "@/components/common/Toast";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { UsersTable } from "@/components/users/UsersTable";
-import { deleteUser, listUsers, type User } from "@/lib/users-api";
+import { deleteUser, listUsers, type User, type UserSortField } from "@/lib/users-api";
 import { listUserTypes, type UserType } from "@/lib/user-types-api";
 
 export default function UsersListPage() {
@@ -22,7 +22,8 @@ export default function UsersListPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<UserSortField>("firstName");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmDeleteTarget, setConfirmDeleteTarget] = useState<User | null>(null);
@@ -31,7 +32,7 @@ export default function UsersListPage() {
 
   const fetchUsers = useCallback(
     async (signal?: AbortSignal) => {
-      const result = await listUsers(page + 1, pageSize, order, signal);
+      const result = await listUsers(page + 1, pageSize, sortBy, sortOrder, signal);
       if (signal?.aborted) return;
       if (result.ok) {
         setUsers(result.data.items);
@@ -40,7 +41,7 @@ export default function UsersListPage() {
         notify(result.message, "error");
       }
     },
-    [notify, page, pageSize, order],
+    [notify, page, pageSize, sortBy, sortOrder],
   );
 
   const fetchUserTypes = useCallback(
@@ -124,7 +125,8 @@ export default function UsersListPage() {
         page={page}
         pageSize={pageSize}
         total={total}
-        order={order}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
         onEdit={handleEditClick}
         onDeleteRequest={handleDeleteRequest}
         onPageChange={setPage}
@@ -132,8 +134,9 @@ export default function UsersListPage() {
           setPageSize(newPageSize);
           setPage(0);
         }}
-        onSortChange={(newOrder) => {
-          setOrder(newOrder);
+        onSortChange={(newSortBy, newSortOrder) => {
+          setSortBy(newSortBy);
+          setSortOrder(newSortOrder);
           setPage(0);
         }}
       />

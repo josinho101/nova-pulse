@@ -49,7 +49,7 @@ describe("buildOpenApiDocument", () => {
     const params = doc.paths["/api/v1/users"]!.get!.parameters!;
 
     expect(params.map((param) => param.name)).toEqual(
-      expect.arrayContaining(["page", "pageSize", "sortOrder"]),
+      expect.arrayContaining(["page", "pageSize", "sortBy", "sortOrder"]),
     );
   });
 

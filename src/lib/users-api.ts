@@ -33,17 +33,29 @@ export interface PaginatedUsers {
   total: number;
 }
 
+export type UserSortField =
+  | "firstName"
+  | "lastName"
+  | "email"
+  | "userType"
+  | "createdAt"
+  | "updatedAt"
+  | "createdBy"
+  | "updatedBy";
+
 const BASE_URL = "/api/v1/users";
 
 export function listUsers(
   page: number = 1,
   pageSize: number = 10,
+  sortBy: UserSortField = "lastName",
   sortOrder: "asc" | "desc" = "asc",
   signal?: AbortSignal,
 ): Promise<ApiResult<PaginatedUsers>> {
   const params = new URLSearchParams({
     page: String(page),
     pageSize: String(pageSize),
+    sortBy,
     sortOrder,
   });
   return apiRequest<PaginatedUsers>(`${BASE_URL}?${params.toString()}`, { signal });

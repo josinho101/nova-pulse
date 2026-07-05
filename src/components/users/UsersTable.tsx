@@ -19,7 +19,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
 import { formatDateTime } from "@/lib/date";
-import type { User } from "@/lib/users-api";
+import type { User, UserSortField } from "@/lib/users-api";
 
 export interface UsersTableProps {
   users: User[];
@@ -28,12 +28,13 @@ export interface UsersTableProps {
   page: number;
   pageSize: number;
   total: number;
-  order: "asc" | "desc";
+  sortBy: UserSortField;
+  sortOrder: "asc" | "desc";
   onEdit: (user: User) => void;
   onDeleteRequest: (user: User) => void;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onSortChange: (order: "asc" | "desc") => void;
+  onSortChange: (sortBy: UserSortField, sortOrder: "asc" | "desc") => void;
 }
 
 export function UsersTable({
@@ -43,7 +44,8 @@ export function UsersTable({
   page,
   pageSize,
   total,
-  order,
+  sortBy,
+  sortOrder,
   onEdit,
   onDeleteRequest,
   onPageChange,
@@ -52,8 +54,12 @@ export function UsersTable({
 }: UsersTableProps) {
   const t = useTranslations("UsersPage");
 
-  const handleSort = () => {
-    onSortChange(order === "asc" ? "desc" : "asc");
+  const handleSort = (field: UserSortField) => {
+    if (field === sortBy) {
+      onSortChange(field, sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      onSortChange(field, "asc");
+    }
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
@@ -70,18 +76,28 @@ export function UsersTable({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>{t("columnFirstName")}</TableCell>
-              <TableCell sortDirection={order}>
-                <TableSortLabel active direction={order} onClick={handleSort}>
-                  {t("columnLastName")}
-                </TableSortLabel>
-              </TableCell>
-              <TableCell>{t("columnEmail")}</TableCell>
-              <TableCell>{t("columnUserType")}</TableCell>
-              <TableCell>{t("columnCreatedAt")}</TableCell>
-              <TableCell>{t("columnUpdatedAt")}</TableCell>
-              <TableCell>{t("columnCreatedBy")}</TableCell>
-              <TableCell>{t("columnUpdatedBy")}</TableCell>
+              {(
+                [
+                  ["firstName", "columnFirstName"],
+                  ["lastName", "columnLastName"],
+                  ["email", "columnEmail"],
+                  ["userType", "columnUserType"],
+                  ["createdAt", "columnCreatedAt"],
+                  ["updatedAt", "columnUpdatedAt"],
+                  ["createdBy", "columnCreatedBy"],
+                  ["updatedBy", "columnUpdatedBy"],
+                ] as [UserSortField, string][]
+              ).map(([field, labelKey]) => (
+                <TableCell key={field} sortDirection={sortBy === field ? sortOrder : false}>
+                  <TableSortLabel
+                    active={sortBy === field}
+                    direction={sortBy === field ? sortOrder : "asc"}
+                    onClick={() => handleSort(field)}
+                  >
+                    {t(labelKey)}
+                  </TableSortLabel>
+                </TableCell>
+              ))}
               <TableCell align="right">{t("columnActions")}</TableCell>
             </TableRow>
           </TableHead>
