@@ -25,7 +25,7 @@ export default function NewUserPage() {
 
   return (
     <>
-      <UserFormPage mode="add" user={null} userTypeOptions={userTypes} />
+      <UserFormPage mode="add" user={null} userTypeOptions={userTypes} userLogin={null} />
       {toast}
     </>
   );

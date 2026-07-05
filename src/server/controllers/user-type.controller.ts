@@ -10,6 +10,7 @@ import {
   type UserTypeStatus,
 } from "@/server/store/user-type.store";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
+import { toFieldErrors } from "@/server/http/validation";
 
 export const userTypeInputSchema = z.object({
   name: z
@@ -28,13 +29,6 @@ export interface UserType extends UserTypeInput {
   updatedAt: string;
   createdBy: string;
   updatedBy: string;
-}
-
-function toFieldErrors(error: z.ZodError) {
-  return error.issues.map((issue) => ({
-    path: issue.path.join("."),
-    message: issue.message,
-  }));
 }
 
 export async function listUserTypes(): Promise<ApiResult<UserType[]>> {

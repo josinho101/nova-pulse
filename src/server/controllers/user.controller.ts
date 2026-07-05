@@ -10,6 +10,7 @@ import {
 import { getUserTypeById, userTypeExists } from "@/server/store/user-type.store";
 import type { RecordStatus } from "@/server/store/record-status";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
+import { toFieldErrors } from "@/server/http/validation";
 
 export const userInputSchema = z.object({
   firstName: z.string().trim().min(1, "firstName is required"),
@@ -65,13 +66,6 @@ const USER_SORT_FIELDS: UserSortField[] = [
 ];
 
 const DEFAULT_SORT_FIELD: UserSortField = "lastName";
-
-function toFieldErrors(error: z.ZodError) {
-  return error.issues.map((issue) => ({
-    path: issue.path.join("."),
-    message: issue.message,
-  }));
-}
 
 export async function listUsers(
   page: number = DEFAULT_PAGE,

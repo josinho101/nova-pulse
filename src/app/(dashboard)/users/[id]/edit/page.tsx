@@ -7,6 +7,7 @@ import { UserFormPage } from "@/components/users/UserFormPage";
 import { useToast } from "@/components/common/Toast";
 import { getUser, type User } from "@/lib/users-api";
 import { listUserTypes, type UserType } from "@/lib/user-types-api";
+import { getUserLogin, type UserLoginSummary } from "@/lib/user-login-api";
 
 export default function EditUserPage({ params }: PageProps<"/users/[id]/edit">) {
   const { id } = use(params);
@@ -16,14 +17,16 @@ export default function EditUserPage({ params }: PageProps<"/users/[id]/edit">) 
 
   const [user, setUser] = useState<User | null>(null);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
+  const [userLogin, setUserLogin] = useState<UserLoginSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
-      const [userResult, userTypesResult] = await Promise.all([
+      const [userResult, userTypesResult, userLoginResult] = await Promise.all([
         getUser(id, controller.signal),
         listUserTypes(controller.signal),
+        getUserLogin(id, controller.signal),
       ]);
 
       if (controller.signal.aborted) return;
@@ -42,6 +45,10 @@ export default function EditUserPage({ params }: PageProps<"/users/[id]/edit">) 
         notify(userTypesResult.message, "error");
       }
 
+      if (userLoginResult.ok) {
+        setUserLogin(userLoginResult.data);
+      }
+
       setLoading(false);
     })();
     return () => controller.abort();
@@ -53,7 +60,7 @@ export default function EditUserPage({ params }: PageProps<"/users/[id]/edit">) 
 
   return (
     <>
-      <UserFormPage mode="edit" user={user} userTypeOptions={userTypes} />
+      <UserFormPage mode="edit" user={user} userTypeOptions={userTypes} userLogin={userLogin} />
       {toast}
     </>
   );

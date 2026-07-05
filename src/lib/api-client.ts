@@ -1,3 +1,5 @@
+import { getStoredToken } from "@/lib/auth-session";
+
 export interface ApiFieldError {
   path: string;
   message: string;
@@ -9,10 +11,12 @@ export type ApiResult<T> =
 
 export async function apiRequest<T>(input: string, init?: RequestInit): Promise<ApiResult<T>> {
   try {
+    const token = getStoredToken();
     const response = await fetch(input, {
       ...init,
       headers: {
         ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },
     });

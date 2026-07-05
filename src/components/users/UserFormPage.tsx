@@ -10,17 +10,21 @@ import MenuItem from "@mui/material/MenuItem";
 import Button from "@mui/material/Button";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import SaveIcon from "@mui/icons-material/Save";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/components/common/Toast";
 import { createUser, updateUser, type User } from "@/lib/users-api";
 import type { UserType } from "@/lib/user-types-api";
+import { saveUserLogin, disableUserLogin, type UserLoginSummary } from "@/lib/user-login-api";
 
 export interface UserFormPageProps {
   mode: "add" | "edit";
   user: User | null;
   userTypeOptions: UserType[];
+  userLogin: UserLoginSummary | null;
 }
 
 interface FieldErrors {
@@ -31,6 +35,9 @@ interface FieldErrors {
   phone?: string;
   email?: string;
   typeId?: string;
+  username?: string;
+  password?: string;
+  confirmPassword?: string;
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,7 +51,7 @@ function TabPanel({ value, index, children }: { value: number; index: number; ch
   );
 }
 
-export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps) {
+export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFormPageProps) {
   const t = useTranslations("UsersPage");
   const router = useRouter();
   const { notify, toast } = useToast();
@@ -58,6 +65,13 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [typeId, setTypeId] = useState<number | "">(user?.typeId ?? "");
+  const [authEnabled, setAuthEnabled] = useState(userLogin !== null);
+  const [username, setUsername] = useState(userLogin?.username ?? "");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [forcePasswordChange, setForcePasswordChange] = useState(
+    userLogin?.forcePasswordChange ?? false,
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,6 +90,7 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
     const trimmedAddress = address.trim();
     const trimmedPhone = phone.trim();
     const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
 
     const errors: FieldErrors = {};
     if (!trimmedFirstName) errors.firstName = t("firstNameRequired");
@@ -86,9 +101,17 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
     else if (!EMAIL_PATTERN.test(trimmedEmail)) errors.email = t("emailInvalid");
     if (typeId === "") errors.typeId = t("userTypeRequired");
 
+    if (authEnabled) {
+      if (!trimmedUsername) errors.username = t("usernameRequired");
+      if (!password && !userLogin) errors.password = t("passwordRequired");
+      if (password && password !== confirmPassword) {
+        errors.confirmPassword = t("passwordsDoNotMatch");
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      setTab(0);
+      setTab(errors.username || errors.password || errors.confirmPassword ? 1 : 0);
       return;
     }
 
@@ -109,33 +132,71 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
     const result =
       mode === "edit" && user ? await updateUser(user.id, input) : await createUser(input);
 
-    setSubmitting(false);
+    if (!result.ok) {
+      setSubmitting(false);
+      const knownFields = [
+        "firstName",
+        "lastName",
+        "dob",
+        "address",
+        "phone",
+        "email",
+        "typeId",
+      ] as const;
+      const nextFieldErrors: FieldErrors = {};
+      for (const field of result.fields ?? []) {
+        if ((knownFields as readonly string[]).includes(field.path)) {
+          nextFieldErrors[field.path as (typeof knownFields)[number]] = field.message;
+        }
+      }
 
-    if (result.ok) {
-      notify(mode === "add" ? t("createSuccess") : t("updateSuccess"), "success");
-      router.push("/users");
+      setFieldErrors(nextFieldErrors);
+      setTab(0);
+      notify(result.fields?.[0]?.message ?? result.message, "error");
       return;
     }
 
-    const knownFields = [
-      "firstName",
-      "lastName",
-      "dob",
-      "address",
-      "phone",
-      "email",
-      "typeId",
-    ] as const;
-    const nextFieldErrors: FieldErrors = {};
-    for (const field of result.fields ?? []) {
-      if ((knownFields as readonly string[]).includes(field.path)) {
-        nextFieldErrors[field.path as (typeof knownFields)[number]] = field.message;
+    const savedUserId = result.data.id;
+
+    if (authEnabled) {
+      const credentialsResult = await saveUserLogin(savedUserId, {
+        username: trimmedUsername,
+        password: password || undefined,
+        forcePasswordChange,
+      });
+
+      setSubmitting(false);
+
+      if (!credentialsResult.ok) {
+        const credentialsKnownFields = ["username", "password", "confirmPassword"] as const;
+        const nextFieldErrors: FieldErrors = {};
+        for (const field of credentialsResult.fields ?? []) {
+          if ((credentialsKnownFields as readonly string[]).includes(field.path)) {
+            nextFieldErrors[field.path as (typeof credentialsKnownFields)[number]] =
+              field.message;
+          }
+        }
+
+        setFieldErrors(nextFieldErrors);
+        setTab(1);
+        notify(credentialsResult.fields?.[0]?.message ?? credentialsResult.message, "error");
+        return;
       }
+    } else if (userLogin) {
+      const disableResult = await disableUserLogin(savedUserId);
+      setSubmitting(false);
+
+      if (!disableResult.ok) {
+        setTab(1);
+        notify(disableResult.message, "error");
+        return;
+      }
+    } else {
+      setSubmitting(false);
     }
 
-    setFieldErrors(nextFieldErrors);
-    setTab(0);
-    notify(result.fields?.[0]?.message ?? result.message, "error");
+    notify(mode === "add" ? t("createSuccess") : t("updateSuccess"), "success");
+    router.push("/users");
   };
 
   return (
@@ -284,7 +345,68 @@ export function UserFormPage({ mode, user, userTypeOptions }: UserFormPageProps)
             </TabPanel>
 
             <TabPanel value={tab} index={1}>
-              <Typography color="text.secondary">{t("comingSoon")}</Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: "sm" }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={authEnabled}
+                      onChange={(event) => setAuthEnabled(event.target.checked)}
+                      disabled={submitting}
+                    />
+                  }
+                  label={t("authEnableLabel")}
+                />
+                <TextField
+                  fullWidth
+                  label={t("usernameLabel")}
+                  value={username}
+                  onChange={(event) => {
+                    setUsername(event.target.value);
+                    clearFieldError("username");
+                  }}
+                  error={!!fieldErrors.username}
+                  helperText={fieldErrors.username ?? " "}
+                  disabled={submitting || !authEnabled}
+                />
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    type="password"
+                    label={t("passwordLabel")}
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      clearFieldError("password");
+                    }}
+                    error={!!fieldErrors.password}
+                    helperText={fieldErrors.password ?? " "}
+                    disabled={submitting || !authEnabled}
+                  />
+                  <TextField
+                    fullWidth
+                    type="password"
+                    label={t("confirmPasswordLabel")}
+                    value={confirmPassword}
+                    onChange={(event) => {
+                      setConfirmPassword(event.target.value);
+                      clearFieldError("confirmPassword");
+                    }}
+                    error={!!fieldErrors.confirmPassword}
+                    helperText={fieldErrors.confirmPassword ?? " "}
+                    disabled={submitting || !authEnabled}
+                  />
+                </Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={forcePasswordChange}
+                      onChange={(event) => setForcePasswordChange(event.target.checked)}
+                      disabled={submitting || !authEnabled}
+                    />
+                  }
+                  label={t("forcePasswordChangeLabel")}
+                />
+              </Box>
             </TabPanel>
 
             <TabPanel value={tab} index={2}>

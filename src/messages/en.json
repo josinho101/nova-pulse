@@ -14,8 +14,10 @@
     "createAccount": "Create an account"
   },
   "LoginForm": {
-    "emailLabel": "Email address",
+    "usernameLabel": "Username",
+    "usernameRequired": "Username is required",
     "passwordLabel": "Password",
+    "passwordRequired": "Password is required",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot Password?",
     "signIn": "Sign In"
@@ -124,6 +126,14 @@
     "tabAuthentication": "Authentication",
     "tabRoleAndGroup": "Role and Group",
     "comingSoon": "Coming soon.",
-    "loadError": "Failed to load user"
+    "loadError": "Failed to load user",
+    "authEnableLabel": "Enable authentication",
+    "usernameLabel": "Username",
+    "usernameRequired": "Username is required",
+    "passwordLabel": "Password",
+    "passwordRequired": "Password is required",
+    "confirmPasswordLabel": "Confirm Password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "forcePasswordChangeLabel": "Force change password on first login"
   }
 }
