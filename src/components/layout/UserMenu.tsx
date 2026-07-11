@@ -69,7 +69,7 @@ export function UserMenu() {
   return (
     <>
       <IconButton onClick={handleOpen} aria-label={t("accountMenuAria")} size="small">
-        <Avatar sx={{ width: 32, height: 32 }}>
+        <Avatar sx={{ width: 32, height: 32, fontSize: "0.75rem" }}>
           {initials ?? <PersonIcon fontSize="small" />}
         </Avatar>
       </IconButton>
