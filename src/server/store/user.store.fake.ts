@@ -20,7 +20,7 @@ export async function listUsers(search?: string): Promise<UserRecord[]> {
     (user) =>
       user.firstName.toLowerCase().includes(needle) ||
       user.lastName.toLowerCase().includes(needle) ||
-      user.email.toLowerCase().includes(needle) ||
+      (user.email ?? "").toLowerCase().includes(needle) ||
       (user.phone ?? "").toLowerCase().includes(needle),
   );
 }
@@ -86,4 +86,8 @@ export async function isUserTypeReferenced(typeId: number): Promise<boolean> {
 
 export async function userExists(id: string): Promise<boolean> {
   return (await getUserById(id)) !== undefined;
+}
+
+export async function findUserByTypeId(typeId: number): Promise<UserRecord | undefined> {
+  return users.find((user) => isActive(user) && user.typeId === typeId);
 }

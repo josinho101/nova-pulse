@@ -6,10 +6,10 @@ export interface UserRecord {
   firstName: string;
   lastName: string;
   middleName?: string;
-  dob: string;
+  dob?: string;
   address?: string;
   phone?: string;
-  email: string;
+  email?: string;
   typeId: number;
   status: RecordStatus;
   createdAt: string;
@@ -22,10 +22,10 @@ export interface UserInputRecord {
   firstName: string;
   lastName: string;
   middleName?: string;
-  dob: string;
+  dob?: string;
   address?: string;
   phone?: string;
-  email: string;
+  email?: string;
   typeId: number;
 }
 
@@ -34,10 +34,10 @@ interface UserRow {
   first_name: string;
   last_name: string;
   middle_name: string | null;
-  dob: string | Date;
+  dob: string | Date | null;
   address: string | null;
   phone: string | null;
-  email: string;
+  email: string | null;
   type_id: number;
   status: number;
   created_at: string;
@@ -46,7 +46,8 @@ interface UserRow {
   updated_by: string;
 }
 
-function toDateOnly(dob: string | Date): string {
+function toDateOnly(dob: string | Date | null): string | undefined {
+  if (dob === null) return undefined;
   return dob instanceof Date ? dob.toISOString().slice(0, 10) : dob;
 }
 
@@ -59,7 +60,7 @@ function toRecord(row: UserRow): UserRecord {
     dob: toDateOnly(row.dob),
     address: row.address ?? undefined,
     phone: row.phone ?? undefined,
-    email: row.email,
+    email: row.email ?? undefined,
     typeId: row.type_id,
     status: row.status as RecordStatus,
     createdAt: new Date(row.created_at).toISOString(),
@@ -97,10 +98,10 @@ export async function addUser(record: UserInputRecord): Promise<UserRecord> {
       record.firstName,
       record.lastName,
       record.middleName ?? null,
-      record.dob,
+      record.dob ?? null,
       record.address ?? null,
       record.phone ?? null,
-      record.email,
+      record.email ?? null,
       record.typeId,
     ],
   );
@@ -118,13 +119,18 @@ export async function updateUser(
       changes.firstName,
       changes.lastName,
       changes.middleName ?? null,
-      changes.dob,
+      changes.dob ?? null,
       changes.address ?? null,
       changes.phone ?? null,
-      changes.email,
+      changes.email ?? null,
       changes.typeId,
     ],
   );
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
+}
+
+export async function findUserByTypeId(typeId: number): Promise<UserRecord | undefined> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_find_user_by_type($1)", [typeId]);
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 

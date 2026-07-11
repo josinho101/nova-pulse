@@ -3,6 +3,8 @@ import type { RecordStatus } from "@/server/store/record-status";
 
 export type UserTypeStatus = RecordStatus;
 
+export const SUPER_ADMIN_USER_TYPE_ID = 0;
+
 export interface UserTypeRecord {
   id: number;
   name: string;

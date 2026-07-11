@@ -25,8 +25,10 @@ export const userInputSchema = z.object({
 
 export type UserInput = z.infer<typeof userInputSchema>;
 
-export interface User extends UserInput {
+export interface User extends Omit<UserInput, "dob" | "email"> {
   id: string;
+  dob?: string;
+  email?: string;
   status: RecordStatus;
   createdAt: string;
   updatedAt: string;
@@ -88,7 +90,7 @@ export async function listUsers(
 
   const compareBy = (user: User): string => {
     if (safeSortBy === "userType") return userTypeNameById.get(user.typeId) ?? "";
-    return user[safeSortBy];
+    return user[safeSortBy] ?? "";
   };
 
   const sorted = [...records].sort((a, b) => {
