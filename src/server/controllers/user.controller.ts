@@ -7,7 +7,11 @@ import {
   listUsers as listUserRecords,
   updateUser as updateUserRecord,
 } from "@/server/store/user.store";
-import { getUserTypeById, userTypeExists } from "@/server/store/user-type.store";
+import {
+  getUserTypeById,
+  SUPER_ADMIN_USER_TYPE_ID,
+  userTypeExists,
+} from "@/server/store/user-type.store";
 import type { RecordStatus } from "@/server/store/record-status";
 import { ApiResult, fail, ok } from "@/server/http/api-response";
 import { toFieldErrors } from "@/server/http/validation";
@@ -153,7 +157,13 @@ export async function updateUser(id: string, input: unknown): Promise<ApiResult<
 }
 
 export async function deleteUser(id: string): Promise<ApiResult<null>> {
-  if (!(await getUserById(id))) return fail(404, "User not found");
+  const user = await getUserById(id);
+  if (!user) return fail(404, "User not found");
+
+  if (user.typeId === SUPER_ADMIN_USER_TYPE_ID) {
+    return fail(403, "Super admin user cannot be deleted");
+  }
+
   await deleteUserRecord(id);
   return ok(null);
 }

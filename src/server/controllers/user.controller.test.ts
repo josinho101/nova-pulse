@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createUser, deleteUser, getUser, listUsers, updateUser } from "./user.controller";
 import { createUserType } from "./user-type.controller";
+import { SUPER_ADMIN_USER_TYPE_ID } from "@/server/store/user-type.store";
+import { addUser as addFakeUser } from "@/server/store/user.store.fake";
 
 vi.mock("@/server/store/user.store", async () => {
   const actual = await vi.importActual<typeof import("@/server/store/user.store")>(
@@ -526,5 +528,20 @@ describe("deleteUser", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
+  });
+
+  it("refuses to delete the super admin user", async () => {
+    const superAdmin = await addFakeUser({
+      ...baseInput(SUPER_ADMIN_USER_TYPE_ID),
+      email: "super@example.com",
+    });
+
+    const result = await deleteUser(superAdmin.id);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+
+    const stillThere = await getUser(superAdmin.id);
+    expect(stillThere.ok).toBe(true);
   });
 });

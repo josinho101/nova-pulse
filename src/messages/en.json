@@ -97,6 +97,7 @@
     "columnActions": "Actions",
     "edit": "Edit",
     "delete": "Delete",
+    "deleteDisabledSuperAdmin": "Super admin cannot be deleted",
     "noUsers": "No users found.",
     "addTitle": "Add User",
     "editTitle": "Edit User",

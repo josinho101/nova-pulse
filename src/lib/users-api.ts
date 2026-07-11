@@ -1,5 +1,7 @@
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 
+export const SUPER_ADMIN_USER_TYPE_ID = 0;
+
 export interface User {
   id: string;
   firstName: string;

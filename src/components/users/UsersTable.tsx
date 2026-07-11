@@ -20,7 +20,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslations } from "next-intl";
 import { formatDateTime } from "@/lib/date";
-import type { User, UserSortField } from "@/lib/users-api";
+import { SUPER_ADMIN_USER_TYPE_ID, type User, type UserSortField } from "@/lib/users-api";
 
 export interface UsersTableProps {
   users: User[];
@@ -84,9 +84,7 @@ export function UsersTable({
                   ["email", "columnEmail"],
                   ["phone", "columnPhone"],
                   ["userType", "columnUserType"],
-                  ["createdAt", "columnCreatedAt"],
                   ["updatedAt", "columnUpdatedAt"],
-                  ["createdBy", "columnCreatedBy"],
                   ["updatedBy", "columnUpdatedBy"],
                 ] as [UserSortField, string][]
               ).map(([field, labelKey]) => (
@@ -106,13 +104,13 @@ export function UsersTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                   <CircularProgress size={28} />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
                   <Typography color="text.secondary">{t("noUsers")}</Typography>
                 </TableCell>
               </TableRow>
@@ -143,12 +141,8 @@ export function UsersTable({
                   <TableCell>{user.phone ?? "-"}</TableCell>
                   <TableCell>{userTypeNameById.get(user.typeId) ?? "-"}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
-                    {formatDateTime(user.createdAt)}
-                  </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDateTime(user.updatedAt)}
                   </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{user.createdBy}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>{user.updatedBy}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
@@ -157,10 +151,17 @@ export function UsersTable({
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={t("delete")}>
-                        <IconButton size="small" color="error" onClick={() => onDeleteRequest(user)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip title={user.typeId === SUPER_ADMIN_USER_TYPE_ID ? t("deleteDisabledSuperAdmin") : t("delete")}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            disabled={user.typeId === SUPER_ADMIN_USER_TYPE_ID}
+                            onClick={() => onDeleteRequest(user)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     </Box>
                   </TableCell>
