@@ -207,7 +207,7 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
         }}
       >
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
             {mode === "edit" ? t("editTitle") : t("addTitle")}
           </Typography>
           <Box sx={{ display: "flex", gap: 1 }}>
@@ -226,7 +226,7 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
 
           <Box sx={{ p: 3 }}>
             <TabPanel value={tab} index={0}>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2, maxWidth: "sm" }}>
+              <Box sx={{ display: "flex", flexDirection: "column", maxWidth: "sm" }}>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <TextField
                     autoFocus
@@ -366,7 +366,7 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
                   helperText={fieldErrors.username ?? " "}
                   disabled={submitting || !authEnabled}
                 />
-                <Box sx={{ display: "flex", gap: 2 }}>
+                <Box sx={{ display: "flex", gap: 2, mt: -2 }}>
                   <TextField
                     fullWidth
                     type="password"
@@ -395,6 +395,7 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
                   />
                 </Box>
                 <FormControlLabel
+                  sx={{ mt: -3 }}
                   control={
                     <Switch
                       checked={forcePasswordChange}

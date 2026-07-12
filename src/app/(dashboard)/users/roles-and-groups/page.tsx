@@ -7,7 +7,7 @@ export default async function RolesAndGroupsPage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
         {t("rolesAndGroups")}
       </Typography>
       <Typography variant="body1" color="text.secondary">

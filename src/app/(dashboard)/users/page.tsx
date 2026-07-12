@@ -120,7 +120,7 @@ export default function UsersListPage() {
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
           {t("title")}
         </Typography>
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>

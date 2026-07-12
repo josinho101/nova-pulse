@@ -151,6 +151,7 @@ export function Sidebar({
               slotProps={{
                 primary: {
                   sx: {
+                    fontSize: "0.875rem",
                     fontWeight: pathname === "/" ? 600 : 400,
                     color: pathname === "/" ? "primary.main" : undefined,
                   },
@@ -197,6 +198,7 @@ export function Sidebar({
                   slotProps={{
                     primary: {
                       sx: {
+                        fontSize: "0.875rem",
                         fontWeight: isUsersSectionActive ? 600 : 400,
                         color: isUsersSectionActive ? "primary.main" : undefined,
                       },
@@ -228,6 +230,7 @@ export function Sidebar({
                   slotProps={{
                     primary: {
                       sx: {
+                        fontSize: "0.875rem",
                         fontWeight: pathname === "/users" ? 600 : 400,
                         color: pathname === "/users" ? "primary.main" : undefined,
                       },
@@ -254,6 +257,7 @@ export function Sidebar({
                   slotProps={{
                     primary: {
                       sx: {
+                        fontSize: "0.875rem",
                         fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
                         color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
                       },
@@ -280,6 +284,7 @@ export function Sidebar({
                   slotProps={{
                     primary: {
                       sx: {
+                        fontSize: "0.875rem",
                         fontWeight: pathname === "/users/user-types" ? 600 : 400,
                         color: pathname === "/users/user-types" ? "primary.main" : undefined,
                       },
@@ -343,6 +348,7 @@ export function Sidebar({
                     slotProps={{
                       primary: {
                         sx: {
+                          fontSize: "0.875rem",
                           fontWeight: pathname === "/users" ? 600 : 400,
                           color: pathname === "/users" ? "primary.main" : undefined,
                         },
@@ -369,6 +375,7 @@ export function Sidebar({
                     slotProps={{
                       primary: {
                         sx: {
+                          fontSize: "0.875rem",
                           fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
                           color:
                             pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
@@ -396,6 +403,7 @@ export function Sidebar({
                     slotProps={{
                       primary: {
                         sx: {
+                          fontSize: "0.875rem",
                           fontWeight: pathname === "/users/user-types" ? 600 : 400,
                           color: pathname === "/users/user-types" ? "primary.main" : undefined,
                         },
@@ -434,6 +442,7 @@ export function Sidebar({
                 slotProps={{
                   primary: {
                     sx: {
+                      fontSize: "0.875rem",
                       fontWeight: pathname === href ? 600 : 400,
                       color: pathname === href ? "primary.main" : undefined,
                     },

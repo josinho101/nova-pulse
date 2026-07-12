@@ -40,6 +40,27 @@ const theme = createTheme({
         paper: ({ theme }) => theme.applyStyles("dark", { backgroundColor: "#000000" }),
       },
     },
+    MuiTextField: {
+      defaultProps: { size: "small" },
+    },
+    MuiFormControl: {
+      defaultProps: { size: "small" },
+    },
+    MuiSelect: {
+      defaultProps: { size: "small" },
+    },
+    MuiButton: {
+      defaultProps: { size: "small" },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        sizeSmall: { paddingTop: 0, paddingBottom: 0 },
+        input: ({ ownerState }) =>
+          ownerState.size === "small"
+            ? { paddingTop: 5.5, paddingBottom: 5.5 }
+            : {},
+      },
+    },
   },
 });
 

@@ -116,7 +116,7 @@ export function UserMenu() {
           <Avatar sx={{ width: 64, height: 64, fontSize: "1.5rem" }}>
             {initials ?? <PersonIcon fontSize="large" />}
           </Avatar>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: "0.875rem", fontWeight: 700 }}>
             {displayName}
           </Typography>
         </Box>
@@ -125,14 +125,18 @@ export function UserMenu() {
           <ListItemIcon>
             <PersonIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>{t("profile")}</ListItemText>
+          <ListItemText slotProps={{ primary: { sx: { fontSize: "0.875rem" } } }}>
+            {t("profile")}
+          </ListItemText>
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleSignOut}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
           </ListItemIcon>
-          <ListItemText>{t("signOut")}</ListItemText>
+          <ListItemText slotProps={{ primary: { sx: { fontSize: "0.875rem" } } }}>
+            {t("signOut")}
+          </ListItemText>
         </MenuItem>
       </Menu>
     </>

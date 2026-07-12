@@ -7,7 +7,7 @@ export default async function DashboardHomePage() {
 
   return (
     <>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="h5" gutterBottom sx={{ fontWeight: 700 }}>
         {tCommon("appName")}
       </Typography>
       <Typography variant="body1" color="text.secondary">
