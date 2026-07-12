@@ -12,12 +12,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const currentUser = await getCurrentUser(request);
-  if (!currentUser) {
-    return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
-  }
 
   const body = await request.json();
-  const result = await createUserType(body, currentUser.id);
+  const result = await createUserType(body, currentUser!.id);
 
   if (!result.ok) {
     return NextResponse.json(

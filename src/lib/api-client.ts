@@ -1,4 +1,4 @@
-import { getStoredToken } from "@/lib/auth-session";
+import { clearSession, getStoredToken } from "@/lib/auth-session";
 
 export interface ApiFieldError {
   path: string;
@@ -24,6 +24,11 @@ export async function apiRequest<T>(input: string, init?: RequestInit): Promise<
     const json = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (response.status === 401 && typeof window !== "undefined") {
+        clearSession();
+        window.location.href = "/login";
+      }
+
       return {
         ok: false,
         status: response.status,
