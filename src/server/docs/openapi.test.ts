@@ -30,11 +30,13 @@ describe("buildOpenApiDocument", () => {
     const schema = doc.components.schemas.UserInput!;
 
     expect(schema.required).toEqual(
-      expect.arrayContaining(["firstName", "lastName", "dob", "email", "typeId"]),
+      expect.arrayContaining(["firstName", "lastName", "typeId"]),
     );
     expect(schema.required).not.toContain("middleName");
     expect(schema.required).not.toContain("address");
     expect(schema.required).not.toContain("phone");
+    expect(schema.required).not.toContain("dob");
+    expect(schema.required).not.toContain("email");
   });
 
   it("documents status/audit fields on the User schema", () => {

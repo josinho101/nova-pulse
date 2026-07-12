@@ -137,7 +137,7 @@ export function UsersTable({
                       {user.lastName}
                     </Link>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.email ?? "-"}</TableCell>
                   <TableCell>{user.phone ?? "-"}</TableCell>
                   <TableCell>{userTypeNameById.get(user.typeId) ?? "-"}</TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>

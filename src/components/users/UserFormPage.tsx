@@ -95,10 +95,8 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
     const errors: FieldErrors = {};
     if (!trimmedFirstName) errors.firstName = t("firstNameRequired");
     if (!trimmedLastName) errors.lastName = t("lastNameRequired");
-    if (!dob) errors.dob = t("dobRequired");
     if (trimmedPhone && !PHONE_PATTERN.test(trimmedPhone)) errors.phone = t("phoneInvalid");
-    if (!trimmedEmail) errors.email = t("emailRequired");
-    else if (!EMAIL_PATTERN.test(trimmedEmail)) errors.email = t("emailInvalid");
+    if (trimmedEmail && !EMAIL_PATTERN.test(trimmedEmail)) errors.email = t("emailInvalid");
     if (typeId === "") errors.typeId = t("userTypeRequired");
 
     if (authEnabled) {
@@ -122,10 +120,10 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
       firstName: trimmedFirstName,
       lastName: trimmedLastName,
       middleName: middleName.trim() || undefined,
-      dob,
+      dob: dob || undefined,
       address: trimmedAddress || undefined,
       phone: trimmedPhone || undefined,
-      email: trimmedEmail,
+      email: trimmedEmail || undefined,
       typeId: typeId as number,
     };
 

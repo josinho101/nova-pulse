@@ -7,10 +7,10 @@ export interface User {
   firstName: string;
   lastName: string;
   middleName?: string;
-  dob: string;
+  dob?: string;
   address?: string;
   phone?: string;
-  email: string;
+  email?: string;
   typeId: number;
   status: 1 | 2;
   createdAt: string;
@@ -25,10 +25,10 @@ export interface UserInput {
   firstName: string;
   lastName: string;
   middleName?: string;
-  dob: string;
+  dob?: string;
   address?: string;
   phone?: string;
-  email: string;
+  email?: string;
   typeId: number;
 }
 

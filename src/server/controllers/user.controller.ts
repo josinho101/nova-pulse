@@ -20,10 +20,10 @@ export const userInputSchema = z.object({
   firstName: z.string().trim().min(1, "firstName is required"),
   lastName: z.string().trim().min(1, "lastName is required"),
   middleName: z.string().trim().min(1).optional(),
-  dob: z.iso.date("dob must be a valid ISO date (YYYY-MM-DD)"),
+  dob: z.iso.date("dob must be a valid ISO date (YYYY-MM-DD)").optional(),
   address: z.string().trim().min(1).optional(),
   phone: z.string().trim().regex(/^[0-9]+$/, "phone must contain digits only").optional(),
-  email: z.email("email must be a valid email address"),
+  email: z.email("email must be a valid email address").optional(),
   typeId: z.number().int("typeId must be an integer"),
 });
 
@@ -163,7 +163,7 @@ export async function createUser(input: unknown, actorId: string): Promise<ApiRe
     ]);
   }
 
-  if (await findUserByEmail(parsed.data.email)) {
+  if (parsed.data.email && (await findUserByEmail(parsed.data.email))) {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
@@ -190,7 +190,7 @@ export async function updateUser(
     ]);
   }
 
-  if (await findUserByEmail(parsed.data.email, id)) {
+  if (parsed.data.email && (await findUserByEmail(parsed.data.email, id))) {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
