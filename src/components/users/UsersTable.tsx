@@ -74,7 +74,7 @@ export function UsersTable({
   return (
     <Paper variant="outlined">
       <TableContainer>
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
               {(

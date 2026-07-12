@@ -77,7 +77,7 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
   return (
     <Paper variant="outlined">
       <TableContainer>
-        <Table>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell sortDirection={sortBy === "name" ? order : false}>
