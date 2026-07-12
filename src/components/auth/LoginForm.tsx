@@ -106,6 +106,10 @@ export function LoginForm() {
           error={!!fieldErrors.username}
           helperText={fieldErrors.username ?? " "}
           disabled={submitting}
+          slotProps={{
+            htmlInput: { sx: { py: 2 } },
+            inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
+          }}
         />
         <TextField
           id="password"
@@ -122,6 +126,10 @@ export function LoginForm() {
           error={!!fieldErrors.password}
           helperText={fieldErrors.password ?? " "}
           disabled={submitting}
+          slotProps={{
+            htmlInput: { sx: { py: 2 } },
+            inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
+          }}
         />
 
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
