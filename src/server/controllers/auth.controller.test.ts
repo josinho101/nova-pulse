@@ -78,17 +78,21 @@ beforeEach(async () => {
 });
 
 async function createTestUser() {
-  const userType = await createUserType({ name: "Admin" });
+  const actorId = crypto.randomUUID();
+  const userType = await createUserType({ name: "Admin" }, actorId);
   if (!userType.ok) throw new Error("setup failed");
 
-  const user = await createUser({
-    firstName: "Jane",
-    lastName: "Doe",
-    dob: "1990-01-01",
-    address: "123 Main St",
-    email: "jane@example.com",
-    typeId: userType.data.id,
-  });
+  const user = await createUser(
+    {
+      firstName: "Jane",
+      lastName: "Doe",
+      dob: "1990-01-01",
+      address: "123 Main St",
+      email: "jane@example.com",
+      typeId: userType.data.id,
+    },
+    actorId,
+  );
   if (!user.ok) throw new Error("setup failed");
   return user.data;
 }

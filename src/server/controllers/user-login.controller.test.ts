@@ -74,9 +74,11 @@ beforeEach(async () => {
 
 let testUserTypeId: number | undefined;
 
+const testActorId = crypto.randomUUID();
+
 async function ensureTestUserType(): Promise<number> {
   if (testUserTypeId !== undefined) return testUserTypeId;
-  const userType = await createUserType({ name: "Admin" });
+  const userType = await createUserType({ name: "Admin" }, testActorId);
   if (!userType.ok) throw new Error("setup failed");
   testUserTypeId = userType.data.id;
   return testUserTypeId;
@@ -85,14 +87,17 @@ async function ensureTestUserType(): Promise<number> {
 async function createTestUser(email = "jane@example.com") {
   const typeId = await ensureTestUserType();
 
-  const user = await createUser({
-    firstName: "Jane",
-    lastName: "Doe",
-    dob: "1990-01-01",
-    address: "123 Main St",
-    email,
-    typeId,
-  });
+  const user = await createUser(
+    {
+      firstName: "Jane",
+      lastName: "Doe",
+      dob: "1990-01-01",
+      address: "123 Main St",
+      email,
+      typeId,
+    },
+    testActorId,
+  );
   if (!user.ok) throw new Error("setup failed");
   return user.data;
 }

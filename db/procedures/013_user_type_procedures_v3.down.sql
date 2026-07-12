@@ -1,0 +1,43 @@
+DROP FUNCTION IF EXISTS sp_set_user_type_actor(INT, UUID);
+DROP FUNCTION IF EXISTS sp_delete_user_type(INT, UUID);
+DROP FUNCTION IF EXISTS sp_update_user_type(INT, TEXT, UUID);
+DROP FUNCTION IF EXISTS sp_create_user_type(TEXT, UUID);
+
+CREATE FUNCTION sp_create_user_type(p_name TEXT, p_created_by TEXT DEFAULT 'system')
+RETURNS SETOF user_types
+LANGUAGE sql
+AS $$
+  INSERT INTO user_types (name, created_by, updated_by)
+  VALUES (p_name, p_created_by, p_created_by)
+  RETURNING *;
+$$;
+
+CREATE FUNCTION sp_update_user_type(p_id INT, p_name TEXT, p_updated_by TEXT DEFAULT 'system')
+RETURNS SETOF user_types
+LANGUAGE sql
+AS $$
+  UPDATE user_types
+  SET name = p_name,
+      updated_by = p_updated_by,
+      updated_at = now()
+  WHERE id = p_id AND status = 1
+  RETURNING *;
+$$;
+
+CREATE FUNCTION sp_delete_user_type(p_id INT, p_updated_by TEXT DEFAULT 'system')
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM users WHERE type_id = p_id AND status = 1) THEN
+    RAISE EXCEPTION 'UserType % is referenced by one or more active users', p_id
+      USING ERRCODE = 'NP001';
+  END IF;
+
+  UPDATE user_types
+  SET status = 2,
+      updated_by = p_updated_by,
+      updated_at = now()
+  WHERE id = p_id AND status = 1;
+END;
+$$;

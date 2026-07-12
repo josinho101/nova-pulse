@@ -47,13 +47,16 @@ vi.mock("@/server/store/user-type.store", async () => {
 const { resetForTests: resetUsers } = await import("@/server/store/user.store");
 const { resetForTests: resetUserTypes } = await import("@/server/store/user-type.store");
 
+let actorId: string;
+
 beforeEach(async () => {
   await resetUsers();
   await resetUserTypes();
+  actorId = crypto.randomUUID();
 });
 
 async function createTestUserType() {
-  const result = await createUserType({ name: "Admin" });
+  const result = await createUserType({ name: "Admin" }, actorId);
   if (!result.ok) throw new Error("setup failed");
   return result.data;
 }
@@ -72,7 +75,7 @@ function baseInput(typeId: number) {
 describe("createUser", () => {
   it("creates a user with a generated id", async () => {
     const userType = await createTestUserType();
-    const result = await createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id), actorId);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -82,7 +85,7 @@ describe("createUser", () => {
 
   it("succeeds without middleName since it is optional", async () => {
     const userType = await createTestUserType();
-    const result = await createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id), actorId);
 
     expect(result.ok).toBe(true);
   });
@@ -92,13 +95,13 @@ describe("createUser", () => {
     const input = baseInput(userType.id) as Record<string, unknown>;
     delete input.address;
 
-    const result = await createUser(input);
+    const result = await createUser(input, actorId);
     expect(result.ok).toBe(true);
   });
 
   it("succeeds without phone since it is optional", async () => {
     const userType = await createTestUserType();
-    const result = await createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id), actorId);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -107,7 +110,7 @@ describe("createUser", () => {
 
   it("succeeds with a valid numeric phone", async () => {
     const userType = await createTestUserType();
-    const result = await createUser({ ...baseInput(userType.id), phone: "5551234567" });
+    const result = await createUser({ ...baseInput(userType.id), phone: "5551234567" }, actorId);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -116,7 +119,7 @@ describe("createUser", () => {
 
   it("rejects a non-numeric phone", async () => {
     const userType = await createTestUserType();
-    const result = await createUser({ ...baseInput(userType.id), phone: "555-CALL" });
+    const result = await createUser({ ...baseInput(userType.id), phone: "555-CALL" }, actorId);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -126,7 +129,7 @@ describe("createUser", () => {
 
   it("rejects an invalid email format", async () => {
     const userType = await createTestUserType();
-    const result = await createUser({ ...baseInput(userType.id), email: "not-an-email" });
+    const result = await createUser({ ...baseInput(userType.id), email: "not-an-email" }, actorId);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -139,7 +142,7 @@ describe("createUser", () => {
     const input = baseInput(userType.id) as Record<string, unknown>;
     delete input.firstName;
 
-    const result = await createUser(input);
+    const result = await createUser(input, actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -147,7 +150,7 @@ describe("createUser", () => {
   });
 
   it("rejects a typeId that does not reference an existing UserType", async () => {
-    const result = await createUser(baseInput(999999));
+    const result = await createUser(baseInput(999999), actorId);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -157,9 +160,9 @@ describe("createUser", () => {
 
   it("rejects a duplicate email", async () => {
     const userType = await createTestUserType();
-    await createUser(baseInput(userType.id));
+    await createUser(baseInput(userType.id), actorId);
 
-    const result = await createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id), actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(409);
@@ -168,13 +171,13 @@ describe("createUser", () => {
 
   it("populates audit fields and defaults status to active", async () => {
     const userType = await createTestUserType();
-    const result = await createUser(baseInput(userType.id));
+    const result = await createUser(baseInput(userType.id), actorId);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.status).toBe(1);
-    expect(result.data.createdBy).toBe("system");
-    expect(result.data.updatedBy).toBe("system");
+    expect(result.data.createdBy).toBe(actorId);
+    expect(result.data.updatedBy).toBe(actorId);
     expect(result.data.createdAt).toBe(result.data.updatedAt);
     expect(new Date(result.data.createdAt).toISOString()).toBe(result.data.createdAt);
   });
@@ -186,13 +189,13 @@ describe("createUser", () => {
       status: 2,
       createdBy: "hacker",
       updatedBy: "hacker",
-    });
+    }, actorId);
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.status).toBe(1);
-    expect(result.data.createdBy).toBe("system");
-    expect(result.data.updatedBy).toBe("system");
+    expect(result.data.createdBy).toBe(actorId);
+    expect(result.data.updatedBy).toBe(actorId);
   });
 });
 
@@ -200,7 +203,7 @@ describe("listUsers", () => {
   it("defaults to page 1 with a page size of 10", async () => {
     const userType = await createTestUserType();
     for (let i = 0; i < 15; i++) {
-      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
+      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` }, actorId);
     }
 
     const result = await listUsers();
@@ -215,7 +218,7 @@ describe("listUsers", () => {
   it("returns the requested page", async () => {
     const userType = await createTestUserType();
     for (let i = 0; i < 15; i++) {
-      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` });
+      await createUser({ ...baseInput(userType.id), email: `user${i}@example.com` }, actorId);
     }
 
     const result = await listUsers(2, 10);
@@ -227,8 +230,8 @@ describe("listUsers", () => {
 
   it("sorts by lastName according to sortOrder", async () => {
     const userType = await createTestUserType();
-    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
-    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
+    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" }, actorId);
+    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" }, actorId);
 
     const ascending = await listUsers(1, 10, "lastName", "asc");
     expect(ascending.ok).toBe(true);
@@ -243,8 +246,8 @@ describe("listUsers", () => {
 
   it("sorts by firstName", async () => {
     const userType = await createTestUserType();
-    await createUser({ ...baseInput(userType.id), firstName: "Zeta", email: "zeta@example.com" });
-    await createUser({ ...baseInput(userType.id), firstName: "Alpha", email: "alpha@example.com" });
+    await createUser({ ...baseInput(userType.id), firstName: "Zeta", email: "zeta@example.com" }, actorId);
+    await createUser({ ...baseInput(userType.id), firstName: "Alpha", email: "alpha@example.com" }, actorId);
 
     const result = await listUsers(1, 10, "firstName", "asc");
     expect(result.ok).toBe(true);
@@ -254,8 +257,8 @@ describe("listUsers", () => {
 
   it("sorts by email", async () => {
     const userType = await createTestUserType();
-    await createUser({ ...baseInput(userType.id), email: "zeta@example.com" });
-    await createUser({ ...baseInput(userType.id), email: "alpha@example.com" });
+    await createUser({ ...baseInput(userType.id), email: "zeta@example.com" }, actorId);
+    await createUser({ ...baseInput(userType.id), email: "alpha@example.com" }, actorId);
 
     const result = await listUsers(1, 10, "email", "asc");
     expect(result.ok).toBe(true);
@@ -267,12 +270,12 @@ describe("listUsers", () => {
   });
 
   it("sorts by userType using the resolved type name, not typeId", async () => {
-    const zetaType = await createUserType({ name: "Zeta Type" });
-    const alphaType = await createUserType({ name: "Alpha Type" });
+    const zetaType = await createUserType({ name: "Zeta Type" }, actorId);
+    const alphaType = await createUserType({ name: "Alpha Type" }, actorId);
     if (!zetaType.ok || !alphaType.ok) throw new Error("setup failed");
 
-    await createUser({ ...baseInput(zetaType.data.id), email: "a@example.com" });
-    await createUser({ ...baseInput(alphaType.data.id), email: "b@example.com" });
+    await createUser({ ...baseInput(zetaType.data.id), email: "a@example.com" }, actorId);
+    await createUser({ ...baseInput(alphaType.data.id), email: "b@example.com" }, actorId);
 
     const result = await listUsers(1, 10, "userType", "asc");
     expect(result.ok).toBe(true);
@@ -285,8 +288,8 @@ describe("listUsers", () => {
 
   it("sorts by createdAt/updatedAt/createdBy/updatedBy", async () => {
     const userType = await createTestUserType();
-    await createUser({ ...baseInput(userType.id), email: "first@example.com" });
-    await createUser({ ...baseInput(userType.id), email: "second@example.com" });
+    await createUser({ ...baseInput(userType.id), email: "first@example.com" }, actorId);
+    await createUser({ ...baseInput(userType.id), email: "second@example.com" }, actorId);
 
     for (const field of ["createdAt", "updatedAt", "createdBy", "updatedBy"] as const) {
       const result = await listUsers(1, 10, field, "asc");
@@ -296,8 +299,8 @@ describe("listUsers", () => {
 
   it("falls back to lastName sort for an invalid sortBy value", async () => {
     const userType = await createTestUserType();
-    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" });
-    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" });
+    await createUser({ ...baseInput(userType.id), lastName: "Zeta", email: "zeta@example.com" }, actorId);
+    await createUser({ ...baseInput(userType.id), lastName: "Alpha", email: "alpha@example.com" }, actorId);
 
     const result = await listUsers(1, 10, "notAField" as never, "asc");
     expect(result.ok).toBe(true);
@@ -307,7 +310,7 @@ describe("listUsers", () => {
 
   it("falls back to defaults for invalid page/pageSize values", async () => {
     const userType = await createTestUserType();
-    await createUser(baseInput(userType.id));
+    await createUser(baseInput(userType.id), actorId);
 
     const result = await listUsers(0, -5);
     expect(result.ok).toBe(true);
@@ -324,14 +327,14 @@ describe("listUsers", () => {
       lastName: "Anderson",
       email: "alice@example.com",
       phone: "1112223333",
-    });
+    }, actorId);
     await createUser({
       ...baseInput(userType.id),
       firstName: "Bob",
       lastName: "Baker",
       email: "bob@example.com",
       phone: "4445556666",
-    });
+    }, actorId);
 
     const byFirstName = await listUsers(1, 10, "firstName", "asc", "alice");
     expect(byFirstName.ok).toBe(true);
@@ -363,7 +366,7 @@ describe("listUsers", () => {
 describe("getUser", () => {
   it("returns the matching user", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
     const result = await getUser(created.data.id);
@@ -381,13 +384,17 @@ describe("getUser", () => {
 describe("updateUser", () => {
   it("updates an existing user", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    const result = await updateUser(created.data.id, {
-      ...baseInput(userType.id),
-      lastName: "Smith",
-    });
+    const result = await updateUser(
+      created.data.id,
+      {
+        ...baseInput(userType.id),
+        lastName: "Smith",
+      },
+      actorId,
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -396,7 +403,7 @@ describe("updateUser", () => {
 
   it("returns 404 for a nonexistent id", async () => {
     const userType = await createTestUserType();
-    const result = await updateUser("missing-id", baseInput(userType.id));
+    const result = await updateUser("missing-id", baseInput(userType.id), actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -404,15 +411,19 @@ describe("updateUser", () => {
 
   it("rejects updating to another user's email", async () => {
     const userType = await createTestUserType();
-    const first = await createUser(baseInput(userType.id));
+    const first = await createUser(baseInput(userType.id), actorId);
     if (!first.ok) throw new Error("setup failed");
-    const second = await createUser({ ...baseInput(userType.id), email: "other@example.com" });
+    const second = await createUser({ ...baseInput(userType.id), email: "other@example.com" }, actorId);
     if (!second.ok) throw new Error("setup failed");
 
-    const result = await updateUser(second.data.id, {
-      ...baseInput(userType.id),
-      email: "jane@example.com",
-    });
+    const result = await updateUser(
+      second.data.id,
+      {
+        ...baseInput(userType.id),
+        email: "jane@example.com",
+      },
+      actorId,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -421,22 +432,26 @@ describe("updateUser", () => {
 
   it("allows updating a user back to its own current email", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    const result = await updateUser(created.data.id, baseInput(userType.id));
+    const result = await updateUser(created.data.id, baseInput(userType.id), actorId);
     expect(result.ok).toBe(true);
   });
 
   it("rejects an update with a bad typeId", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    const result = await updateUser(created.data.id, {
-      ...baseInput(userType.id),
-      typeId: 999999,
-    });
+    const result = await updateUser(
+      created.data.id,
+      {
+        ...baseInput(userType.id),
+        typeId: 999999,
+      },
+      actorId,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -445,20 +460,25 @@ describe("updateUser", () => {
 
   it("preserves createdAt/createdBy/status while refreshing updatedAt/updatedBy", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    const result = await updateUser(created.data.id, {
-      ...baseInput(userType.id),
-      lastName: "Smith",
-    });
+    const updaterId = crypto.randomUUID();
+    const result = await updateUser(
+      created.data.id,
+      {
+        ...baseInput(userType.id),
+        lastName: "Smith",
+      },
+      updaterId,
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.createdAt).toBe(created.data.createdAt);
     expect(result.data.createdBy).toBe(created.data.createdBy);
     expect(result.data.status).toBe(created.data.status);
-    expect(result.data.updatedBy).toBe("system");
+    expect(result.data.updatedBy).toBe(updaterId);
     expect(new Date(result.data.updatedAt).getTime()).toBeGreaterThanOrEqual(
       new Date(created.data.updatedAt).getTime(),
     );
@@ -466,11 +486,11 @@ describe("updateUser", () => {
 
   it("returns 404 for a soft-deleted user", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    await deleteUser(created.data.id);
-    const result = await updateUser(created.data.id, baseInput(userType.id));
+    await deleteUser(created.data.id, actorId);
+    const result = await updateUser(created.data.id, baseInput(userType.id), actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -480,15 +500,15 @@ describe("updateUser", () => {
 describe("deleteUser", () => {
   it("deletes an existing user", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    const result = await deleteUser(created.data.id);
+    const result = await deleteUser(created.data.id, actorId);
     expect(result.ok).toBe(true);
   });
 
   it("returns 404 for a nonexistent id", async () => {
-    const result = await deleteUser("missing-id");
+    const result = await deleteUser("missing-id", actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
@@ -496,10 +516,10 @@ describe("deleteUser", () => {
 
   it("hides the user from getUser after deletion", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    await deleteUser(created.data.id);
+    await deleteUser(created.data.id, actorId);
     const result = await getUser(created.data.id);
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -508,10 +528,10 @@ describe("deleteUser", () => {
 
   it("hides the user from listUsers after deletion", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    await deleteUser(created.data.id);
+    await deleteUser(created.data.id, actorId);
     const result = await listUsers();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -520,23 +540,26 @@ describe("deleteUser", () => {
 
   it("returns 404 when deleting an already-deleted user", async () => {
     const userType = await createTestUserType();
-    const created = await createUser(baseInput(userType.id));
+    const created = await createUser(baseInput(userType.id), actorId);
     if (!created.ok) throw new Error("setup failed");
 
-    await deleteUser(created.data.id);
-    const result = await deleteUser(created.data.id);
+    await deleteUser(created.data.id, actorId);
+    const result = await deleteUser(created.data.id, actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
   });
 
   it("refuses to delete the super admin user", async () => {
-    const superAdmin = await addFakeUser({
-      ...baseInput(SUPER_ADMIN_USER_TYPE_ID),
-      email: "super@example.com",
-    });
+    const superAdmin = await addFakeUser(
+      {
+        ...baseInput(SUPER_ADMIN_USER_TYPE_ID),
+        email: "super@example.com",
+      },
+      actorId,
+    );
 
-    const result = await deleteUser(superAdmin.id);
+    const result = await deleteUser(superAdmin.id, actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(403);

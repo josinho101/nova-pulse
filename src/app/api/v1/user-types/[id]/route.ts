@@ -4,6 +4,7 @@ import {
   getUserType,
   updateUserType,
 } from "@/server/controllers/user-type.controller";
+import { getCurrentUser } from "@/server/auth/current-user";
 
 function parseId(id: string): number | null {
   const parsed = Number(id);
@@ -29,12 +30,17 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const currentUser = await getCurrentUser(request);
+  if (!currentUser) {
+    return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  }
+
   const { id } = await params;
   const parsedId = parseId(id);
   if (parsedId === null) return invalidIdResponse();
 
   const body = await request.json();
-  const result = await updateUserType(parsedId, body);
+  const result = await updateUserType(parsedId, body, currentUser.id);
 
   if (!result.ok) {
     return NextResponse.json(
@@ -46,12 +52,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   return NextResponse.json({ data: result.data });
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const currentUser = await getCurrentUser(request);
+  if (!currentUser) {
+    return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  }
+
   const { id } = await params;
   const parsedId = parseId(id);
   if (parsedId === null) return invalidIdResponse();
 
-  const result = await deleteUserType(parsedId);
+  const result = await deleteUserType(parsedId, currentUser.id);
 
   if (!result.ok) {
     return NextResponse.json({ error: { message: result.message } }, { status: result.status });

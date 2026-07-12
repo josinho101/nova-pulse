@@ -36,8 +36,10 @@ export interface User extends Omit<UserInput, "dob" | "email"> {
   status: RecordStatus;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
 export interface PaginatedUsers {
@@ -73,6 +75,27 @@ const USER_SORT_FIELDS: UserSortField[] = [
 
 const DEFAULT_SORT_FIELD: UserSortField = "lastName";
 
+export async function resolveActorNames(
+  actorIds: Array<string | undefined>,
+): Promise<Map<string, string>> {
+  const uniqueIds = [...new Set(actorIds.filter((id): id is string => Boolean(id)))];
+  const pairs = await Promise.all(
+    uniqueIds.map(async (id) => {
+      const actor = await getUserById(id);
+      return [id, actor ? `${actor.firstName} ${actor.lastName}` : ""] as const;
+    }),
+  );
+  return new Map(pairs);
+}
+
+function withActorNames(user: User, actorNameById: Map<string, string>): User {
+  return {
+    ...user,
+    createdByName: user.createdBy ? actorNameById.get(user.createdBy) : undefined,
+    updatedByName: user.updatedBy ? actorNameById.get(user.updatedBy) : undefined,
+  };
+}
+
 export async function listUsers(
   page: number = DEFAULT_PAGE,
   pageSize: number = DEFAULT_PAGE_SIZE,
@@ -92,12 +115,19 @@ export async function listUsers(
   );
   const userTypeNameById = new Map(userTypeNamePairs);
 
+  const actorNameById = await resolveActorNames(
+    records.flatMap((record) => [record.createdBy, record.updatedBy]),
+  );
+  const withNames = records.map((record) => withActorNames(record, actorNameById));
+
   const compareBy = (user: User): string => {
     if (safeSortBy === "userType") return userTypeNameById.get(user.typeId) ?? "";
+    if (safeSortBy === "createdBy") return user.createdByName ?? "";
+    if (safeSortBy === "updatedBy") return user.updatedByName ?? "";
     return user[safeSortBy] ?? "";
   };
 
-  const sorted = [...records].sort((a, b) => {
+  const sorted = [...withNames].sort((a, b) => {
     const comparison = compareBy(a).localeCompare(compareBy(b));
     return sortOrder === "asc" ? comparison : -comparison;
   });
@@ -105,16 +135,23 @@ export async function listUsers(
   const start = (safePage - 1) * safePageSize;
   const items = sorted.slice(start, start + safePageSize);
 
-  return ok({ items, page: safePage, pageSize: safePageSize, total: sorted.length });
+  return ok({
+    items,
+    page: safePage,
+    pageSize: safePageSize,
+    total: sorted.length,
+  });
 }
 
 export async function getUser(id: string): Promise<ApiResult<User>> {
   const user = await getUserById(id);
   if (!user) return fail(404, "User not found");
-  return ok(user);
+
+  const actorNameById = await resolveActorNames([user.createdBy, user.updatedBy]);
+  return ok(withActorNames(user, actorNameById));
 }
 
-export async function createUser(input: unknown): Promise<ApiResult<User>> {
+export async function createUser(input: unknown, actorId: string): Promise<ApiResult<User>> {
   const parsed = userInputSchema.safeParse(input);
   if (!parsed.success) {
     return fail(400, "Validation failed", toFieldErrors(parsed.error));
@@ -130,11 +167,16 @@ export async function createUser(input: unknown): Promise<ApiResult<User>> {
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const created = await addUser(parsed.data);
-  return ok(created);
+  const created = await addUser(parsed.data, actorId);
+  const actorNameById = await resolveActorNames([created.createdBy, created.updatedBy]);
+  return ok(withActorNames(created, actorNameById));
 }
 
-export async function updateUser(id: string, input: unknown): Promise<ApiResult<User>> {
+export async function updateUser(
+  id: string,
+  input: unknown,
+  actorId: string,
+): Promise<ApiResult<User>> {
   if (!(await getUserById(id))) return fail(404, "User not found");
 
   const parsed = userInputSchema.safeParse(input);
@@ -152,11 +194,12 @@ export async function updateUser(id: string, input: unknown): Promise<ApiResult<
     return fail(409, "Conflict", [{ path: "email", message: "Email is already in use" }]);
   }
 
-  const updated = await updateUserRecord(id, parsed.data);
-  return ok(updated!);
+  const updated = await updateUserRecord(id, parsed.data, actorId);
+  const actorNameById = await resolveActorNames([updated!.createdBy, updated!.updatedBy]);
+  return ok(withActorNames(updated!, actorNameById));
 }
 
-export async function deleteUser(id: string): Promise<ApiResult<null>> {
+export async function deleteUser(id: string, actorId: string): Promise<ApiResult<null>> {
   const user = await getUserById(id);
   if (!user) return fail(404, "User not found");
 
@@ -164,6 +207,6 @@ export async function deleteUser(id: string): Promise<ApiResult<null>> {
     return fail(403, "Super admin user cannot be deleted");
   }
 
-  await deleteUserRecord(id);
+  await deleteUserRecord(id, actorId);
   return ok(null);
 }

@@ -143,7 +143,7 @@ export function UsersTable({
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDateTime(user.updatedAt)}
                   </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{user.updatedBy}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{user.updatedByName ?? "-"}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
                       <Tooltip title={t("edit")}>

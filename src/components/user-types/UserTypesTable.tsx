@@ -30,7 +30,7 @@ export interface UserTypesTableProps {
 
 const DEFAULT_ROWS_PER_PAGE = 10;
 
-type UserTypeSortField = "name" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy";
+type UserTypeSortField = "name" | "createdAt" | "updatedAt" | "createdByName" | "updatedByName";
 
 export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: UserTypesTableProps) {
   const t = useTranslations("UserTypesPage");
@@ -42,7 +42,7 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
   const sortedRows = useMemo(() => {
     const rows = [...userTypes];
     rows.sort((a, b) => {
-      const comparison = a[sortBy].localeCompare(b[sortBy]);
+      const comparison = (a[sortBy] ?? "").localeCompare(b[sortBy] ?? "");
       return order === "asc" ? comparison : -comparison;
     });
     return rows;
@@ -107,20 +107,20 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
                   {t("columnUpdatedAt")}
                 </TableSortLabel>
               </TableCell>
-              <TableCell sortDirection={sortBy === "createdBy" ? order : false}>
+              <TableCell sortDirection={sortBy === "createdByName" ? order : false}>
                 <TableSortLabel
-                  active={sortBy === "createdBy"}
-                  direction={sortBy === "createdBy" ? order : "asc"}
-                  onClick={() => handleSort("createdBy")}
+                  active={sortBy === "createdByName"}
+                  direction={sortBy === "createdByName" ? order : "asc"}
+                  onClick={() => handleSort("createdByName")}
                 >
                   {t("columnCreatedBy")}
                 </TableSortLabel>
               </TableCell>
-              <TableCell sortDirection={sortBy === "updatedBy" ? order : false}>
+              <TableCell sortDirection={sortBy === "updatedByName" ? order : false}>
                 <TableSortLabel
-                  active={sortBy === "updatedBy"}
-                  direction={sortBy === "updatedBy" ? order : "asc"}
-                  onClick={() => handleSort("updatedBy")}
+                  active={sortBy === "updatedByName"}
+                  direction={sortBy === "updatedByName" ? order : "asc"}
+                  onClick={() => handleSort("updatedByName")}
                 >
                   {t("columnUpdatedBy")}
                 </TableSortLabel>
@@ -151,8 +151,8 @@ export function UserTypesTable({ userTypes, loading, onEdit, onDeleteRequest }: 
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     {formatDateTime(userType.updatedAt)}
                   </TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{userType.createdBy}</TableCell>
-                  <TableCell sx={{ whiteSpace: "nowrap" }}>{userType.updatedBy}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{userType.createdByName ?? "-"}</TableCell>
+                  <TableCell sx={{ whiteSpace: "nowrap" }}>{userType.updatedByName ?? "-"}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
                       <Tooltip title={t("edit")}>

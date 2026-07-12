@@ -37,7 +37,10 @@ export async function findUserByEmail(
   return users.find((user) => isActive(user) && user.email === email && user.id !== excludeId);
 }
 
-export async function addUser(record: UserInputRecord): Promise<UserRecord> {
+export async function addUser(
+  record: UserInputRecord,
+  createdBy: string | null,
+): Promise<UserRecord> {
   const now = new Date().toISOString();
   const created: UserRecord = {
     id: crypto.randomUUID(),
@@ -45,8 +48,8 @@ export async function addUser(record: UserInputRecord): Promise<UserRecord> {
     status: RECORD_STATUS.ACTIVE,
     createdAt: now,
     updatedAt: now,
-    createdBy: "system",
-    updatedBy: "system",
+    createdBy: createdBy ?? undefined,
+    updatedBy: createdBy ?? undefined,
   };
   users.push(created);
   return created;
@@ -55,6 +58,7 @@ export async function addUser(record: UserInputRecord): Promise<UserRecord> {
 export async function updateUser(
   id: string,
   changes: UserInputRecord,
+  updatedBy: string,
 ): Promise<UserRecord | undefined> {
   const index = users.findIndex((user) => user.id === id);
   if (index === -1) return undefined;
@@ -62,20 +66,32 @@ export async function updateUser(
     ...users[index],
     ...changes,
     updatedAt: new Date().toISOString(),
-    updatedBy: "system",
+    updatedBy,
   };
   users[index] = updated;
   return updated;
 }
 
-export async function deleteUser(id: string): Promise<boolean> {
+export async function setUserActor(id: string, actorId: string): Promise<UserRecord | undefined> {
+  const index = users.findIndex((user) => user.id === id);
+  if (index === -1) return undefined;
+  const updated: UserRecord = {
+    ...users[index],
+    createdBy: actorId,
+    updatedBy: actorId,
+  };
+  users[index] = updated;
+  return updated;
+}
+
+export async function deleteUser(id: string, updatedBy: string): Promise<boolean> {
   const index = users.findIndex((user) => user.id === id && isActive(user));
   if (index === -1) return false;
   users[index] = {
     ...users[index],
     status: RECORD_STATUS.DELETED,
     updatedAt: new Date().toISOString(),
-    updatedBy: "system",
+    updatedBy,
   };
   return true;
 }

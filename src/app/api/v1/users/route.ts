@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createUser, listUsers, type UserSortField } from "@/server/controllers/user.controller";
+import { getCurrentUser } from "@/server/auth/current-user";
 
 const SORT_FIELDS: UserSortField[] = [
   "firstName",
@@ -29,8 +30,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const currentUser = await getCurrentUser(request);
+  if (!currentUser) {
+    return NextResponse.json({ error: { message: "Unauthorized" } }, { status: 401 });
+  }
+
   const body = await request.json();
-  const result = await createUser(body);
+  const result = await createUser(body, currentUser.id);
 
   if (!result.ok) {
     return NextResponse.json(

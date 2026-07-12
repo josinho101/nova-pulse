@@ -14,8 +14,8 @@ export interface UserRecord {
   status: RecordStatus;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface UserInputRecord {
@@ -42,8 +42,8 @@ interface UserRow {
   status: number;
   created_at: string;
   updated_at: string;
-  created_by: string;
-  updated_by: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 function toDateOnly(dob: string | Date | null): string | undefined {
@@ -65,8 +65,8 @@ function toRecord(row: UserRow): UserRecord {
     status: row.status as RecordStatus,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
-    createdBy: row.created_by,
-    updatedBy: row.updated_by,
+    createdBy: row.created_by ?? undefined,
+    updatedBy: row.updated_by ?? undefined,
   };
 }
 
@@ -91,9 +91,12 @@ export async function findUserByEmail(
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export async function addUser(record: UserInputRecord): Promise<UserRecord> {
+export async function addUser(
+  record: UserInputRecord,
+  createdBy: string | null,
+): Promise<UserRecord> {
   const result = await pool.query<UserRow>(
-    "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8)",
+    "SELECT * FROM sp_create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",
     [
       record.firstName,
       record.lastName,
@@ -103,6 +106,7 @@ export async function addUser(record: UserInputRecord): Promise<UserRecord> {
       record.phone ?? null,
       record.email ?? null,
       record.typeId,
+      createdBy,
     ],
   );
   return toRecord(result.rows[0]);
@@ -111,9 +115,10 @@ export async function addUser(record: UserInputRecord): Promise<UserRecord> {
 export async function updateUser(
   id: string,
   changes: UserInputRecord,
+  updatedBy: string,
 ): Promise<UserRecord | undefined> {
   const result = await pool.query<UserRow>(
-    "SELECT * FROM sp_update_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+    "SELECT * FROM sp_update_user($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
     [
       id,
       changes.firstName,
@@ -124,8 +129,17 @@ export async function updateUser(
       changes.phone ?? null,
       changes.email ?? null,
       changes.typeId,
+      updatedBy,
     ],
   );
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
+}
+
+export async function setUserActor(id: string, actorId: string): Promise<UserRecord | undefined> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_set_user_actor($1, $2)", [
+    id,
+    actorId,
+  ]);
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
@@ -134,8 +148,11 @@ export async function findUserByTypeId(typeId: number): Promise<UserRecord | und
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export async function deleteUser(id: string): Promise<boolean> {
-  const result = await pool.query<UserRow>("SELECT * FROM sp_delete_user($1)", [id]);
+export async function deleteUser(id: string, updatedBy: string): Promise<boolean> {
+  const result = await pool.query<UserRow>("SELECT * FROM sp_delete_user($1, $2)", [
+    id,
+    updatedBy,
+  ]);
   return result.rows.length > 0;
 }
 

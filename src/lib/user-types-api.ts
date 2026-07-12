@@ -6,8 +6,10 @@ export interface UserType {
   status: 1 | 2;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
 export interface UserTypeInput {

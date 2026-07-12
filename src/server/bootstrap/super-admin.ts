@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { superAdminConfig } from "@/server/config/super-admin";
-import { addUser, findUserByTypeId } from "@/server/store/user.store";
+import { addUser, findUserByTypeId, setUserActor } from "@/server/store/user.store";
 import { createUserLogin } from "@/server/store/user-login.store";
-import { SUPER_ADMIN_USER_TYPE_ID } from "@/server/store/user-type.store";
+import { SUPER_ADMIN_USER_TYPE_ID, setUserTypeActor } from "@/server/store/user-type.store";
 
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -16,11 +16,18 @@ export async function ensureSuperAdmin(): Promise<void> {
     );
   }
 
-  const user = await addUser({
-    firstName: superAdminConfig.firstName,
-    lastName: superAdminConfig.lastName,
-    typeId: SUPER_ADMIN_USER_TYPE_ID,
-  });
+  // No authenticated actor exists yet — create the row with a null actor,
+  // then self-reference it once its id is known.
+  const user = await addUser(
+    {
+      firstName: superAdminConfig.firstName,
+      lastName: superAdminConfig.lastName,
+      typeId: SUPER_ADMIN_USER_TYPE_ID,
+    },
+    null,
+  );
+  await setUserActor(user.id, user.id);
+  await setUserTypeActor(SUPER_ADMIN_USER_TYPE_ID, user.id);
 
   const passwordHash = await bcrypt.hash(superAdminConfig.password, BCRYPT_SALT_ROUNDS);
   await createUserLogin({

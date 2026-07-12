@@ -11,8 +11,8 @@ export interface UserTypeRecord {
   status: UserTypeStatus;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 const USER_TYPE_REFERENCED_ERROR_CODE = "NP001";
@@ -30,8 +30,8 @@ interface UserTypeRow {
   status: number;
   created_at: string;
   updated_at: string;
-  created_by: string;
-  updated_by: string;
+  created_by: string | null;
+  updated_by: string | null;
 }
 
 function toRecord(row: UserTypeRow): UserTypeRecord {
@@ -41,8 +41,8 @@ function toRecord(row: UserTypeRow): UserTypeRecord {
     status: row.status as UserTypeStatus,
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
-    createdBy: row.created_by,
-    updatedBy: row.updated_by,
+    createdBy: row.created_by ?? undefined,
+    updatedBy: row.updated_by ?? undefined,
   };
 }
 
@@ -67,9 +67,13 @@ export async function findUserTypeByName(
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export async function addUserType(record: { name: string }): Promise<UserTypeRecord> {
-  const result = await pool.query<UserTypeRow>("SELECT * FROM sp_create_user_type($1)", [
+export async function addUserType(
+  record: { name: string },
+  createdBy: string,
+): Promise<UserTypeRecord> {
+  const result = await pool.query<UserTypeRow>("SELECT * FROM sp_create_user_type($1, $2)", [
     record.name,
+    createdBy,
   ]);
   return toRecord(result.rows[0]);
 }
@@ -77,17 +81,30 @@ export async function addUserType(record: { name: string }): Promise<UserTypeRec
 export async function updateUserType(
   id: number,
   changes: { name: string },
+  updatedBy: string,
 ): Promise<UserTypeRecord | undefined> {
-  const result = await pool.query<UserTypeRow>("SELECT * FROM sp_update_user_type($1, $2)", [
+  const result = await pool.query<UserTypeRow>("SELECT * FROM sp_update_user_type($1, $2, $3)", [
     id,
     changes.name,
+    updatedBy,
   ]);
   return result.rows[0] ? toRecord(result.rows[0]) : undefined;
 }
 
-export async function deleteUserType(id: number): Promise<boolean> {
+export async function setUserTypeActor(
+  id: number,
+  actorId: string,
+): Promise<UserTypeRecord | undefined> {
+  const result = await pool.query<UserTypeRow>("SELECT * FROM sp_set_user_type_actor($1, $2)", [
+    id,
+    actorId,
+  ]);
+  return result.rows[0] ? toRecord(result.rows[0]) : undefined;
+}
+
+export async function deleteUserType(id: number, updatedBy: string): Promise<boolean> {
   try {
-    await pool.query("SELECT sp_delete_user_type($1)", [id]);
+    await pool.query("SELECT sp_delete_user_type($1, $2)", [id, updatedBy]);
     return true;
   } catch (error) {
     if (

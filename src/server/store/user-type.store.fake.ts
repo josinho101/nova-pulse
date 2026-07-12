@@ -30,7 +30,10 @@ export async function findUserTypeByName(
   );
 }
 
-export async function addUserType(record: { name: string }): Promise<UserTypeRecord> {
+export async function addUserType(
+  record: { name: string },
+  createdBy: string,
+): Promise<UserTypeRecord> {
   const now = new Date().toISOString();
   const created: UserTypeRecord = {
     id: nextId++,
@@ -38,8 +41,8 @@ export async function addUserType(record: { name: string }): Promise<UserTypeRec
     status: 1,
     createdAt: now,
     updatedAt: now,
-    createdBy: "system",
-    updatedBy: "system",
+    createdBy,
+    updatedBy: createdBy,
   };
   userTypes.push(created);
   return created;
@@ -48,6 +51,7 @@ export async function addUserType(record: { name: string }): Promise<UserTypeRec
 export async function updateUserType(
   id: number,
   changes: { name: string },
+  updatedBy: string,
 ): Promise<UserTypeRecord | undefined> {
   const index = userTypes.findIndex((userType) => userType.id === id);
   if (index === -1) return undefined;
@@ -55,7 +59,22 @@ export async function updateUserType(
     ...userTypes[index],
     name: changes.name,
     updatedAt: new Date().toISOString(),
-    updatedBy: "system",
+    updatedBy,
+  };
+  userTypes[index] = updated;
+  return updated;
+}
+
+export async function setUserTypeActor(
+  id: number,
+  actorId: string,
+): Promise<UserTypeRecord | undefined> {
+  const index = userTypes.findIndex((userType) => userType.id === id);
+  if (index === -1) return undefined;
+  const updated: UserTypeRecord = {
+    ...userTypes[index],
+    createdBy: actorId,
+    updatedBy: actorId,
   };
   userTypes[index] = updated;
   return updated;
@@ -65,7 +84,7 @@ export function makeDeleteUserType(
   isReferenced: (id: number) => boolean | Promise<boolean>,
   ReferencedError: new (id: number) => Error,
 ) {
-  return async function deleteUserType(id: number): Promise<boolean> {
+  return async function deleteUserType(id: number, updatedBy: string): Promise<boolean> {
     const index = userTypes.findIndex((userType) => userType.id === id);
     if (index === -1) return false;
 
@@ -77,7 +96,7 @@ export function makeDeleteUserType(
       ...userTypes[index],
       status: 2,
       updatedAt: new Date().toISOString(),
-      updatedBy: "system",
+      updatedBy,
     };
     return true;
   };
