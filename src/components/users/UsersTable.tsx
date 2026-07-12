@@ -79,8 +79,7 @@ export function UsersTable({
             <TableRow>
               {(
                 [
-                  ["firstName", "columnFirstName"],
-                  ["lastName", "columnLastName"],
+                  ["firstName", "columnName"],
                   ["email", "columnEmail"],
                   ["phone", "columnPhone"],
                   ["userType", "columnUserType"],
@@ -104,13 +103,13 @@ export function UsersTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                   <CircularProgress size={28} />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                   <Typography color="text.secondary">{t("noUsers")}</Typography>
                 </TableCell>
               </TableRow>
@@ -124,17 +123,7 @@ export function UsersTable({
                       underline="hover"
                       onClick={() => onEdit(user)}
                     >
-                      {user.firstName}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      component="button"
-                      type="button"
-                      underline="hover"
-                      onClick={() => onEdit(user)}
-                    >
-                      {user.lastName}
+                      {`${user.firstName} ${user.lastName}`}
                     </Link>
                   </TableCell>
                   <TableCell>{user.email ?? "-"}</TableCell>
