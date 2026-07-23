@@ -20,7 +20,8 @@
     "passwordRequired": "Password is required",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot Password?",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "invalidCredentials": "Oops! Incorrect username or password. Please try again."
   },
   "DashboardPage": {
     "welcomeMessage": "Welcome back. Here is a quick overview of your pharmacy operations."

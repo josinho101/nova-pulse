@@ -6,10 +6,10 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useToast } from "@/components/common/Toast";
 import { login } from "@/lib/auth-api";
 import { isAuthenticated, storeSession } from "@/lib/auth-session";
 
@@ -23,11 +23,11 @@ const KNOWN_FIELDS = ["username", "password"] as const;
 export function LoginForm() {
   const t = useTranslations("LoginForm");
   const router = useRouter();
-  const { notify, toast } = useToast();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [alreadyAuthenticated] = useState(() => isAuthenticated());
 
@@ -58,6 +58,7 @@ export function LoginForm() {
 
     setSubmitting(true);
     setFieldErrors({});
+    setFormError(null);
 
     const result = await login({ username: trimmedUsername, password });
 
@@ -76,75 +77,81 @@ export function LoginForm() {
       }
     }
 
-    setFieldErrors(nextFieldErrors);
-    notify(result.fields?.[0]?.message ?? result.message, "error");
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setFieldErrors(nextFieldErrors);
+    } else if (result.status === 401) {
+      setFormError(t("invalidCredentials"));
+    } else {
+      setFormError(result.message);
+    }
   };
 
   if (alreadyAuthenticated) return null;
 
   return (
-    <>
-      <Box
-        component="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleSubmit();
+    <Box
+      component="form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void handleSubmit();
+      }}
+      sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 2 }}
+    >
+      <TextField
+        id="username"
+        name="username"
+        label={t("usernameLabel")}
+        autoComplete="username"
+        fullWidth
+        value={username}
+        onChange={(event) => {
+          setUsername(event.target.value);
+          clearFieldError("username");
+          setFormError(null);
         }}
-        sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 2 }}
-      >
-        <TextField
-          id="username"
-          name="username"
-          label={t("usernameLabel")}
-          autoComplete="username"
-          fullWidth
-          value={username}
-          onChange={(event) => {
-            setUsername(event.target.value);
-            clearFieldError("username");
-          }}
-          error={!!fieldErrors.username}
-          helperText={fieldErrors.username ?? " "}
-          disabled={submitting}
-          slotProps={{
-            htmlInput: { sx: { py: 2 } },
-            inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
-          }}
-        />
-        <TextField
-          id="password"
-          name="password"
-          type="password"
-          label={t("passwordLabel")}
-          autoComplete="current-password"
-          fullWidth
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-            clearFieldError("password");
-          }}
-          error={!!fieldErrors.password}
-          helperText={fieldErrors.password ?? " "}
-          disabled={submitting}
-          slotProps={{
-            htmlInput: { sx: { py: 2 } },
-            inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
-          }}
-        />
+        error={!!fieldErrors.username}
+        helperText={fieldErrors.username ?? " "}
+        disabled={submitting}
+        slotProps={{
+          htmlInput: { sx: { py: 2 } },
+          inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
+        }}
+      />
+      <TextField
+        id="password"
+        name="password"
+        type="password"
+        label={t("passwordLabel")}
+        autoComplete="current-password"
+        fullWidth
+        value={password}
+        onChange={(event) => {
+          setPassword(event.target.value);
+          clearFieldError("password");
+          setFormError(null);
+        }}
+        error={!!fieldErrors.password}
+        helperText={fieldErrors.password ?? " "}
+        disabled={submitting}
+        slotProps={{
+          htmlInput: { sx: { py: 2 } },
+          inputLabel: { sx: { top: "5px", "&.MuiInputLabel-shrink": { top: 0 } } },
+        }}
+      />
 
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <FormControlLabel control={<Checkbox size="small" />} label={t("rememberMe")} />
-          <Link href="#" style={{ fontSize: 14 }}>
-            {t("forgotPassword")}
-          </Link>
-        </Box>
-
-        <Button type="submit" variant="contained" size="large" fullWidth loading={submitting}>
-          {t("signIn")}
-        </Button>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <FormControlLabel control={<Checkbox size="small" />} label={t("rememberMe")} />
+        <Link href="#" style={{ fontSize: 14 }}>
+          {t("forgotPassword")}
+        </Link>
       </Box>
 
-      {toast}
-    </>
+      <Button type="submit" variant="contained" size="large" fullWidth loading={submitting}>
+        {t("signIn")}
+      </Button>
+      <FormHelperText error={!!formError} sx={{ textAlign: "center", mt: -1, minHeight: "1.25em" }}>
+        {formError ?? " "}
+      </FormHelperText>
+    </Box>
   );
 }
