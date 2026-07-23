@@ -20,9 +20,9 @@ const ROUTE_CRUMBS: Record<string, Crumb[]> = {
     { labelKey: "users", href: "/users" },
     { labelKey: "addUser", href: "/users/new" },
   ],
-  "/users/roles-and-groups": [
+  "/users/groups": [
     { labelKey: "users", href: "/users" },
-    { labelKey: "rolesAndGroups", href: "/users/roles-and-groups" },
+    { labelKey: "groups", href: "/users/groups" },
   ],
   "/users/user-types": [
     { labelKey: "users", href: "/users" },

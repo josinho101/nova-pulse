@@ -54,7 +54,7 @@ export function Sidebar({
   const pathname = usePathname();
   const isUsersSectionActive =
     pathname === "/users" ||
-    pathname === "/users/roles-and-groups" ||
+    pathname === "/users/groups" ||
     pathname === "/users/user-types";
   const [usersOpen, setUsersOpen] = useState(isUsersSectionActive);
   const [flyoutOpen, setFlyoutOpen] = useState(false);
@@ -240,26 +240,26 @@ export function Sidebar({
               </ListItemButton>
               <ListItemButton
                 component={Link}
-                href="/users/roles-and-groups"
-                selected={pathname === "/users/roles-and-groups"}
+                href="/users/groups"
+                selected={pathname === "/users/groups"}
                 sx={{ borderRadius: 1, pl: 4 }}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 36,
-                    color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                    color: pathname === "/users/groups" ? "primary.main" : undefined,
                   }}
                 >
                   <GroupsIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={t("rolesAndGroups")}
+                  primary={t("groups")}
                   slotProps={{
                     primary: {
                       sx: {
                         fontSize: "0.875rem",
-                        fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
-                        color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                        fontWeight: pathname === "/users/groups" ? 600 : 400,
+                        color: pathname === "/users/groups" ? "primary.main" : undefined,
                       },
                     },
                   }}
@@ -358,27 +358,27 @@ export function Sidebar({
                 </ListItemButton>
                 <ListItemButton
                   component={Link}
-                  href="/users/roles-and-groups"
-                  selected={pathname === "/users/roles-and-groups"}
+                  href="/users/groups"
+                  selected={pathname === "/users/groups"}
                   sx={{ borderRadius: 1 }}
                 >
                   <ListItemIcon
                     sx={{
                       minWidth: 36,
-                      color: pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                      color: pathname === "/users/groups" ? "primary.main" : undefined,
                     }}
                   >
                     <GroupsIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText
-                    primary={t("rolesAndGroups")}
+                    primary={t("groups")}
                     slotProps={{
                       primary: {
                         sx: {
                           fontSize: "0.875rem",
-                          fontWeight: pathname === "/users/roles-and-groups" ? 600 : 400,
+                          fontWeight: pathname === "/users/groups" ? 600 : 400,
                           color:
-                            pathname === "/users/roles-and-groups" ? "primary.main" : undefined,
+                            pathname === "/users/groups" ? "primary.main" : undefined,
                         },
                       },
                     }}
