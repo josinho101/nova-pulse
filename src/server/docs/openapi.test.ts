@@ -17,6 +17,18 @@ describe("buildOpenApiDocument", () => {
     expect(Object.keys(doc.paths["/api/v1/user-types/{id}"]!)).toEqual(
       expect.arrayContaining(["get", "put", "delete"]),
     );
+    expect(Object.keys(doc.paths["/api/v1/user-groups"]!)).toEqual(
+      expect.arrayContaining(["get", "post"]),
+    );
+    expect(Object.keys(doc.paths["/api/v1/user-groups/{id}"]!)).toEqual(
+      expect.arrayContaining(["get", "put", "delete"]),
+    );
+    expect(Object.keys(doc.paths["/api/v1/user-groups/{id}/members"]!)).toEqual(
+      expect.arrayContaining(["get", "post"]),
+    );
+    expect(Object.keys(doc.paths["/api/v1/user-groups/{id}/members/{userId}"]!)).toEqual(
+      expect.arrayContaining(["delete"]),
+    );
     expect(doc.paths["/api/v1/health"]?.get).toBeDefined();
   });
 
@@ -96,5 +108,41 @@ describe("buildOpenApiDocument", () => {
     const doc = buildOpenApiDocument();
     const nameSchema = doc.components.schemas.UserTypeInput?.properties?.name;
     expect(nameSchema).toMatchObject({ maxLength: 20, minLength: 1 });
+  });
+
+  it("derives UserGroupInput schema from the real Zod schema", () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.components.schemas.UserGroupInput?.required).toContain("name");
+  });
+
+  it("derives the 20-character max length constraint on UserGroupInput.name", () => {
+    const doc = buildOpenApiDocument();
+    const nameSchema = doc.components.schemas.UserGroupInput?.properties?.name;
+    expect(nameSchema).toMatchObject({ maxLength: 20, minLength: 1 });
+  });
+
+  it("documents status/audit fields on the UserGroup schema", () => {
+    const doc = buildOpenApiDocument();
+    const schema = doc.components.schemas.UserGroup!;
+
+    expect(schema.required).toEqual(
+      expect.arrayContaining(["status", "createdAt", "updatedAt", "createdBy", "updatedBy"]),
+    );
+  });
+
+  it("documents the duplicate-name 409 for user-group create and update", () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths["/api/v1/user-groups"]!.post!.responses["409"]).toBeDefined();
+    expect(doc.paths["/api/v1/user-groups/{id}"]!.put!.responses["409"]).toBeDefined();
+  });
+
+  it("documents the deleteUserGroup 409 for groups referenced by members", () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths["/api/v1/user-groups/{id}"]!.delete!.responses["409"]).toBeDefined();
+  });
+
+  it("documents the duplicate-membership 409 on the add-member endpoint", () => {
+    const doc = buildOpenApiDocument();
+    expect(doc.paths["/api/v1/user-groups/{id}/members"]!.post!.responses["409"]).toBeDefined();
   });
 });
