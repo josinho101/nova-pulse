@@ -150,8 +150,7 @@
     "deleteConfirmDescription": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
     "tabGeneral": "General",
     "tabAuthentication": "Authentication",
-    "tabRoleAndGroup": "Role and Group",
-    "comingSoon": "Coming soon.",
+    "tabRoleAndGroup": "Groups and Permissions",
     "loadError": "Failed to load user",
     "authEnableLabel": "Enable authentication",
     "usernameLabel": "Username",
@@ -160,6 +159,9 @@
     "passwordRequired": "Password is required",
     "confirmPasswordLabel": "Confirm Password",
     "passwordsDoNotMatch": "Passwords do not match",
-    "forcePasswordChangeLabel": "Force change password on first login"
+    "forcePasswordChangeLabel": "Force change password on first login",
+    "availableGroupsLabel": "Available groups",
+    "assignedGroupsLabel": "Assigned groups",
+    "groupsSaveError": "Failed to save groups"
   }
 }

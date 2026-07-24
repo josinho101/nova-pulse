@@ -19,12 +19,16 @@ import { useToast } from "@/components/common/Toast";
 import { createUser, updateUser, type User } from "@/lib/users-api";
 import type { UserType } from "@/lib/user-types-api";
 import { saveUserLogin, disableUserLogin, type UserLoginSummary } from "@/lib/user-login-api";
+import { setGroupsForUser, type UserGroup } from "@/lib/user-groups-api";
+import { GroupsTransferList } from "@/components/users/GroupsTransferList";
 
 export interface UserFormPageProps {
   mode: "add" | "edit";
   user: User | null;
   userTypeOptions: UserType[];
   userLogin: UserLoginSummary | null;
+  allGroups: UserGroup[];
+  assignedGroupIds: number[];
 }
 
 interface FieldErrors {
@@ -51,7 +55,14 @@ function TabPanel({ value, index, children }: { value: number; index: number; ch
   );
 }
 
-export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFormPageProps) {
+export function UserFormPage({
+  mode,
+  user,
+  userTypeOptions,
+  userLogin,
+  allGroups,
+  assignedGroupIds,
+}: UserFormPageProps) {
   const t = useTranslations("UsersPage");
   const router = useRouter();
   const { notify, toast } = useToast();
@@ -72,6 +83,7 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
   const [forcePasswordChange, setForcePasswordChange] = useState(
     userLogin?.forcePasswordChange ?? false,
   );
+  const [groupIds, setGroupIds] = useState<number[]>(assignedGroupIds);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -191,6 +203,21 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
       }
     } else {
       setSubmitting(false);
+    }
+
+    const originalGroupIds = new Set(assignedGroupIds);
+    const groupIdsChanged =
+      groupIds.length !== assignedGroupIds.length ||
+      groupIds.some((id) => !originalGroupIds.has(id));
+
+    if (groupIdsChanged) {
+      const groupsResult = await setGroupsForUser(savedUserId, groupIds);
+
+      if (!groupsResult.ok) {
+        setTab(2);
+        notify(t("groupsSaveError"), "error");
+        return;
+      }
     }
 
     notify(mode === "add" ? t("createSuccess") : t("updateSuccess"), "success");
@@ -409,7 +436,12 @@ export function UserFormPage({ mode, user, userTypeOptions, userLogin }: UserFor
             </TabPanel>
 
             <TabPanel value={tab} index={2}>
-              <Typography color="text.secondary">{t("comingSoon")}</Typography>
+              <GroupsTransferList
+                allGroups={allGroups}
+                assignedGroupIds={groupIds}
+                onChange={setGroupIds}
+                disabled={submitting}
+              />
             </TabPanel>
           </Box>
         </Paper>

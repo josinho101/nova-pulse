@@ -1,6 +1,7 @@
 import {
   addUserToGroup,
   findMembership,
+  listGroupsForUser as listGroupsForUserStore,
   listMembersByGroup,
   removeUserFromGroup,
 } from "@/server/store/user-group-member.store";
@@ -51,4 +52,37 @@ export async function removeGroupMember(
 
   await removeUserFromGroup(userId, groupId);
   return ok(null);
+}
+
+export async function listGroupsForUser(userId: string): Promise<ApiResult<UserGroupMember[]>> {
+  if (!(await userExists(userId))) return fail(404, "User not found");
+
+  const records = await listGroupsForUserStore(userId);
+  return ok(records);
+}
+
+export async function setGroupsForUser(
+  userId: string,
+  groupIds: number[],
+  actorId: string,
+): Promise<ApiResult<UserGroupMember[]>> {
+  if (!(await userExists(userId))) return fail(404, "User not found");
+
+  for (const groupId of groupIds) {
+    if (!(await userGroupExists(groupId))) return fail(404, `UserGroup ${groupId} not found`);
+  }
+
+  const current = await listGroupsForUserStore(userId);
+  const currentGroupIds = new Set(current.map((member) => member.groupId));
+  const desiredGroupIds = new Set(groupIds);
+
+  for (const groupId of desiredGroupIds) {
+    if (!currentGroupIds.has(groupId)) await addUserToGroup(userId, groupId, actorId);
+  }
+  for (const groupId of currentGroupIds) {
+    if (!desiredGroupIds.has(groupId)) await removeUserFromGroup(userId, groupId);
+  }
+
+  const updated = await listGroupsForUserStore(userId);
+  return ok(updated);
 }

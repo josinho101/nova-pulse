@@ -16,6 +16,13 @@ export interface UserGroupInput {
   name: string;
 }
 
+export interface UserGroupMember {
+  userId: string;
+  groupId: number;
+  createdAt: string;
+  createdBy?: string;
+}
+
 const BASE_URL = "/api/v1/user-groups";
 
 export function listUserGroups(signal?: AbortSignal): Promise<ApiResult<UserGroup[]>> {
@@ -38,4 +45,21 @@ export function updateUserGroup(id: number, input: UserGroupInput): Promise<ApiR
 
 export function deleteUserGroup(id: number): Promise<ApiResult<null>> {
   return apiRequest<null>(`${BASE_URL}/${id}`, { method: "DELETE" });
+}
+
+export function getGroupsForUser(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<ApiResult<UserGroupMember[]>> {
+  return apiRequest<UserGroupMember[]>(`/api/v1/users/${userId}/groups`, { signal });
+}
+
+export function setGroupsForUser(
+  userId: string,
+  groupIds: number[],
+): Promise<ApiResult<UserGroupMember[]>> {
+  return apiRequest<UserGroupMember[]>(`/api/v1/users/${userId}/groups`, {
+    method: "PUT",
+    body: JSON.stringify({ groupIds }),
+  });
 }

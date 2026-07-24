@@ -106,6 +106,15 @@ const addUserGroupMemberInputSchema: OpenApiSchema = {
   additionalProperties: false,
 };
 
+const setUserGroupsInputSchema: OpenApiSchema = {
+  type: "object",
+  properties: {
+    groupIds: { type: "array", items: { type: "integer" } },
+  },
+  required: ["groupIds"],
+  additionalProperties: false,
+};
+
 const paginatedUsersSchema: OpenApiSchema = {
   type: "object",
   properties: {
@@ -525,6 +534,38 @@ export function buildOpenApiDocument(): OpenApiDocument {
           },
         },
       },
+      "/api/v1/users/{id}/groups": {
+        get: {
+          summary: "List the groups a user belongs to",
+          tags: ["Users"],
+          parameters: [idParameter],
+          responses: {
+            "200": jsonResponse(
+              "List of group memberships for the user",
+              dataListEnvelope("#/components/schemas/UserGroupMember"),
+            ),
+            "404": errorResponse("User not found"),
+          },
+        },
+        put: {
+          summary: "Replace the groups a user belongs to",
+          tags: ["Users"],
+          parameters: [idParameter],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/SetUserGroupsInput" } },
+            },
+          },
+          responses: {
+            "200": jsonResponse(
+              "Group memberships updated",
+              dataListEnvelope("#/components/schemas/UserGroupMember"),
+            ),
+            "404": errorResponse("User or one of the groups not found"),
+          },
+        },
+      },
     },
     components: {
       schemas: {
@@ -537,6 +578,7 @@ export function buildOpenApiDocument(): OpenApiDocument {
         UserGroup: userGroupSchema,
         UserGroupMember: userGroupMemberSchema,
         AddUserGroupMemberInput: addUserGroupMemberInputSchema,
+        SetUserGroupsInput: setUserGroupsInputSchema,
         ApiFieldError: apiFieldErrorSchema,
         ErrorEnvelope: errorEnvelopeSchema,
         HealthStatus: healthStatusSchema,

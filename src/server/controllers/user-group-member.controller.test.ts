@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { addGroupMember, listGroupMembers, removeGroupMember } from "./user-group-member.controller";
+import {
+  addGroupMember,
+  listGroupMembers,
+  listGroupsForUser,
+  removeGroupMember,
+  setGroupsForUser,
+} from "./user-group-member.controller";
 import { createUserGroup } from "./user-group.controller";
 
 vi.mock("@/server/store/user.store", async () => {
@@ -149,6 +155,62 @@ describe("removeGroupMember", () => {
 
   it("returns 404 for a nonexistent group", async () => {
     const result = await removeGroupMember(999999, userId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+  });
+});
+
+describe("listGroupsForUser", () => {
+  it("lists the groups a user belongs to", async () => {
+    await addGroupMember(groupId, userId, actorId);
+    const result = await listGroupsForUser(userId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.some((member) => member.groupId === groupId)).toBe(true);
+  });
+
+  it("returns 404 for a nonexistent user", async () => {
+    const result = await listGroupsForUser(crypto.randomUUID());
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+  });
+});
+
+describe("setGroupsForUser", () => {
+  it("adds the user to the given groups", async () => {
+    const result = await setGroupsForUser(userId, [groupId], actorId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.some((member) => member.groupId === groupId)).toBe(true);
+  });
+
+  it("removes the user from groups not in the given list", async () => {
+    await addGroupMember(groupId, userId, actorId);
+    const result = await setGroupsForUser(userId, [], actorId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data).toHaveLength(0);
+  });
+
+  it("is idempotent when the group list is unchanged", async () => {
+    await addGroupMember(groupId, userId, actorId);
+    const result = await setGroupsForUser(userId, [groupId], actorId);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.map((member) => member.groupId)).toEqual([groupId]);
+  });
+
+  it("returns 404 for a nonexistent user", async () => {
+    const result = await setGroupsForUser(crypto.randomUUID(), [groupId], actorId);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+  });
+
+  it("returns 404 for a nonexistent group", async () => {
+    const result = await setGroupsForUser(userId, [999999], actorId);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
